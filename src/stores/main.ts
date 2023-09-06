@@ -2,6 +2,13 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { makeAutoObservable, runInAction } from 'mobx';
 import { get, set } from 'idb-keyval';
 
+const canUseMT =
+  import.meta.env.VITE_ENABLE_MT === '1' && 'SharedArrayBuffer' in window;
+const ffmpegVersion = '0.12.3';
+const ffmpegName = canUseMT ? 'core-mt' : 'core';
+const ffmpegWorker = canUseMT ? 'ffmpeg-core.worker.js' : undefined;
+const ffmpegBaseURL = `https://unpkg.com/@ffmpeg/${ffmpegName}@${ffmpegVersion}/dist/esm`;
+
 async function retrieveBlob(
   url: string,
   type: string,
@@ -120,8 +127,6 @@ class MainStore {
   }
 
   async load() {
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.3/dist/esm';
-
     this.ffmpeg.on('log', e => {
       console.log(e);
       runInAction(() => {
@@ -138,11 +143,11 @@ class MainStore {
     // domain can be used directly.
     await this.ffmpeg.load({
       coreURL: await retrieveBlob(
-        `${baseURL}/ffmpeg-core.js`,
+        `${ffmpegBaseURL}/ffmpeg-core.js`,
         'text/javascript',
       ),
       wasmURL: await retrieveBlob(
-        `${baseURL}/ffmpeg-core.wasm`,
+        `${ffmpegBaseURL}/ffmpeg-core.wasm`,
         'application/wasm',
         progress => {
           runInAction(() => {
@@ -150,6 +155,12 @@ class MainStore {
           });
         },
       ),
+      workerURL: ffmpegWorker
+        ? await retrieveBlob(
+            `${ffmpegBaseURL}/${ffmpegWorker}`,
+            'text/javascript',
+          )
+        : undefined,
     });
 
     runInAction(() => {
