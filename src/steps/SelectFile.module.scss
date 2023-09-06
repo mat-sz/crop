@@ -1,0 +1,44 @@
+label {
+  position: relative;
+  background: #222222;
+  color: white;
+  border-radius: 5px;
+  padding: 2rem;
+  width: 20rem;
+  text-align: center;
+  display: block;
+  box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    background: #444444;
+  }
+
+  input {
+    cursor: pointer;
+    position: absolute;
+    inset: 0;
+    display: block;
+    background: transparent;
+    opacity: 0.01;
+    font-size: 0;
+  }
+}
+
+.credits {
+  width: 20rem;
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+
+  div {
+    margin-bottom: 1rem;
+  }
+
+  a {
+    color: black;
+
+    svg {
+      font-size: 1.2rem;
+    }
+  }
+}

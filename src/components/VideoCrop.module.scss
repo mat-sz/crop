@@ -1,0 +1,135 @@
+$handle-width: 3px;
+$handle-size: 2rem;
+$box-width: 2px;
+
+$handle-offset: -$handle-width - $box-width;
+
+.videoPreview {
+  box-shadow: 0 0 20px 5px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  width: 100%;
+}
+
+.crop {
+  position: relative;
+  font-size: 0;
+
+  .box {
+    border: $box-width solid white;
+    position: absolute;
+    inset: 0;
+    touch-action: none;
+
+    .dimensions {
+      position: absolute;
+      top: -2rem;
+      right: 0;
+      z-index: 9999;
+      color: white;
+      font-size: 0.9rem;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.25rem;
+    }
+
+    svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      cursor: move;
+      touch-action: manipulation;
+
+      line {
+        stroke: white;
+        stroke-width: $box-width;
+      }
+    }
+  }
+
+  .handles {
+    & > div {
+      position: absolute;
+      width: $handle-size;
+      height: $handle-size;
+      border-color: white;
+      border-width: $handle-width;
+      touch-action: manipulation;
+    }
+  }
+
+  .handleNW,
+  .handleN,
+  .handleNE {
+    top: $handle-offset;
+    border-top-style: solid;
+  }
+
+  .handleNW,
+  .handleW,
+  .handleSW {
+    left: $handle-offset;
+    border-left-style: solid;
+  }
+
+  .handleNE,
+  .handleE,
+  .handleSE {
+    right: $handle-offset;
+    border-right-style: solid;
+  }
+
+  .handleSW,
+  .handleS,
+  .handleSE {
+    bottom: $handle-offset;
+    border-bottom-style: solid;
+  }
+
+  .handleN,
+  .handleS {
+    left: 50%;
+    transform: translate(-50%, 0);
+  }
+
+  .handleE,
+  .handleW {
+    top: 50%;
+    transform: translate(0, -50%);
+  }
+
+  .handleNW {
+    cursor: nw-resize;
+  }
+
+  .handleN {
+    cursor: n-resize;
+  }
+
+  .handleNE {
+    cursor: ne-resize;
+  }
+
+  .handleE {
+    cursor: e-resize;
+  }
+
+  .handleSE {
+    cursor: se-resize;
+  }
+
+  .handleS {
+    cursor: s-resize;
+  }
+
+  .handleSW {
+    cursor: sw-resize;
+  }
+
+  .handleW {
+    cursor: w-resize;
+  }
+}
+
+.options {
+  margin-bottom: 0.25rem;
+}

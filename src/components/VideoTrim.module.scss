@@ -1,0 +1,92 @@
+.timeline {
+  background: #111111;
+  height: 2rem;
+  flex: 1;
+
+  position: relative;
+  box-shadow: 0 0 20px 5px rgba(0, 0, 0, 0.2);
+  touch-action: none;
+
+  .range {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #333333;
+    cursor: move;
+    touch-action: manipulation;
+  }
+
+  .current,
+  .handleLeft,
+  .handleRight {
+    position: absolute;
+
+    &:after {
+      display: none;
+      position: absolute;
+      bottom: -1.75rem;
+      content: attr(data-time);
+      z-index: 9999;
+      color: white;
+      font-size: 0.9rem;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.25rem;
+      font-size: 0.9rem;
+    }
+
+    &.active:after {
+      display: block;
+    }
+  }
+
+  .handleLeft,
+  .handleRight {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    width: 1rem;
+    border: 3px solid white;
+    touch-action: manipulation;
+  }
+
+  .current {
+    border-left: 3px solid white;
+    touch-action: manipulation;
+    top: 0;
+    bottom: 0;
+    transform: translate(-1.5px, 0);
+    cursor: ew-resize;
+
+    &.active:after {
+      transform: translate(-50%, 0);
+    }
+  }
+
+  .handleLeft {
+    left: -3px;
+    border-right-style: none;
+    cursor: w-resize;
+
+    &:after {
+      left: 0;
+    }
+  }
+
+  .handleRight {
+    right: -3px;
+    border-left-style: none;
+    cursor: e-resize;
+
+    &:after {
+      right: 0;
+    }
+  }
+}
+
+.controls {
+  display: flex;
+  margin-bottom: 0.25rem;
+  margin-top: 0.25rem;
+}

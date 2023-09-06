@@ -1,0 +1,39 @@
+.steps {
+  counter-reset: steps;
+  list-style-type: none;
+  display: flex;
+  padding: 0;
+
+  li {
+    counter-increment: steps;
+    position: relative;
+    padding: 1rem;
+    padding-top: 1.5rem;
+    cursor: pointer;
+
+    &:before {
+      width: 1rem;
+      height: 1rem;
+      font-size: 0.8rem;
+
+      position: absolute;
+      top: 0.25rem;
+      left: 50%;
+      transform: translate(-50%, 0);
+      border: 1px solid black;
+      border-radius: 100%;
+      content: counter(steps);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      line-height: 0.6rem;
+    }
+
+    &.current {
+      &:before {
+        background: black;
+        color: white;
+      }
+    }
+  }
+}
