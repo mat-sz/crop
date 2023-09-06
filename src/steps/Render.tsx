@@ -71,10 +71,13 @@ export const Render: React.FC = observer(() => {
       args.push('-t', `${mainStore.time[1] * video.duration - start}`);
     }
 
+    args.push('-c:v', 'libx264');
     args.push('-preset', 'veryfast');
 
     if (mainStore.mute) {
       args.push('-an');
+    } else {
+      args.push('-c:a', 'copy');
     }
 
     mainStore.exec(args);

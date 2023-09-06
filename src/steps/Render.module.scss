@@ -1,6 +1,10 @@
 .step {
+  progress {
+    width: 500px;
+  }
+
   pre {
-    max-width: 100%;
+    max-width: 500px;
     max-height: 500px;
     overflow-wrap: break-word;
     word-wrap: break-word;
