@@ -22,6 +22,12 @@ export const SelectFile: React.FC = () => {
         <span>Select a video file</span>
       </label>
       <div className={styles.credits}>
+        <ul>
+          <li>✔️ Free and open source</li>
+          <li>✔️ Crop, trim, mirror or mute your video easily</li>
+          <li>✔️ No watermarks</li>
+          <li>✔️ Your video files stay on your computer</li>
+        </ul>
         <div>
           💜 Thanks to the{' '}
           <a
