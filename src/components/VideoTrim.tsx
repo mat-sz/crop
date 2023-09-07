@@ -31,6 +31,18 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
     onStart: () => {
       video.pause();
     },
+    onClick: ({ state, x }) => {
+      if (state.direction !== 'move') {
+        return;
+      }
+
+      const rect = timelineRef.current!.getBoundingClientRect();
+      const relativeX = clamp((x - rect.left) / rect.width, 0, 1);
+      const currentTime =
+        clamp(relativeX, state.time![0], state.time![1]) * video.duration;
+      setCurrentTime(currentTime);
+      video.currentTime = currentTime;
+    },
     onMove: ({ x, deltaX, state }) => {
       ignoreTimeUpdatesRef.current = true;
       const rect = timelineRef.current!.getBoundingClientRect();
