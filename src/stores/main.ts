@@ -86,6 +86,11 @@ class MainStore {
     this.mute = false;
     this.flipH = false;
     this.flipV = false;
+
+    if (this.video) {
+      this.video.pause();
+      this.video.currentTime = 0.1;
+    }
   }
 
   async loadVideo(file: File) {

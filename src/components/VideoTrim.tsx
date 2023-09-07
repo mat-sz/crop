@@ -27,6 +27,7 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
     x?: number;
     time?: number[];
     currentTime?: number;
+    paused: boolean;
   }>(
     (x, _, state) => {
       ignoreTimeUpdatesRef.current = true;
@@ -78,6 +79,10 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
         if (typeof state.currentTime !== 'undefined') {
           video.currentTime = state.currentTime;
         }
+
+        if (!state.paused) {
+          video.play();
+        }
       },
     },
   );
@@ -126,7 +131,14 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
               right: `${100 - time[1] * 100}%`,
             }}
             onPointerDown={e => {
-              startDragging({ direction: 'move', x: e.clientX, time });
+              e.stopPropagation();
+              startDragging({
+                direction: 'move',
+                x: e.clientX,
+                time,
+                paused: video.paused,
+              });
+              video.pause();
             }}
           >
             <div
@@ -136,7 +148,12 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
               data-time={humanTime(time[0] * video.duration)}
               onPointerDown={e => {
                 e.stopPropagation();
-                startDragging({ direction: 'left', currentTime });
+                startDragging({
+                  direction: 'left',
+                  currentTime,
+                  paused: video.paused,
+                });
+                video.pause();
               }}
             />
             <div
@@ -146,7 +163,12 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
               data-time={humanTime(time[1] * video.duration)}
               onPointerDown={e => {
                 e.stopPropagation();
-                startDragging({ direction: 'right', currentTime });
+                startDragging({
+                  direction: 'right',
+                  currentTime,
+                  paused: video.paused,
+                });
+                video.pause();
               }}
             />
           </div>
@@ -158,7 +180,14 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
               left: `${(currentTime / video.duration) * 100}%`,
             }}
             onPointerDown={e => {
-              startDragging({ direction: 'seek', x: e.clientX, time });
+              e.stopPropagation();
+              startDragging({
+                direction: 'seek',
+                x: e.clientX,
+                time,
+                paused: video.paused,
+              });
+              video.pause();
             }}
             data-time={humanTime(currentTime)}
           ></div>

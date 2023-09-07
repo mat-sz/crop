@@ -86,6 +86,7 @@ export const Crop: React.FC = observer(() => {
           <button
             onClick={() => {
               runInAction(() => {
+                video.pause();
                 mainStore.step = 2;
               });
             }}
