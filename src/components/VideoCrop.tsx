@@ -104,60 +104,60 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
     areaRef.current = area;
   }, [area]);
 
-  const { startDragging } = usePointerDrag<{
+  const { dragProps } = usePointerDrag<{
     direction: string;
-    x?: number;
-    y?: number;
     area?: number[];
-  }>((x, y, state) => {
-    const rect = canvasPreviewRef.current!.getBoundingClientRect();
+  }>({
+    onMove: ({ x, y, deltaX, deltaY, state }) => {
+      const rect = canvasPreviewRef.current!.getBoundingClientRect();
 
-    let newArea = [...area];
+      let newArea = [...area];
 
-    if (state.direction === 'm') {
-      const relativeX = clamp(
-        (x - state.x!) / rect.width,
-        -1 * state.area![0],
-        1 - state.area![2],
-      );
-      const relativeY = clamp(
-        (y - state.y!) / rect.height,
-        -1 * state.area![1],
-        1 - state.area![3],
-      );
-      newArea[0] = state.area![0] + relativeX;
-      newArea[2] = state.area![2] + relativeX;
-      newArea[1] = state.area![1] + relativeY;
-      newArea[3] = state.area![3] + relativeY;
-    } else {
-      const relativeX = clamp((x - rect.left) / rect.width, 0, 1);
-      const relativeY = clamp((y - rect.top) / rect.height, 0, 1);
-
-      if (state.direction.includes('n')) {
-        newArea[1] = Math.min(relativeY, Math.max(newArea[3] - 0.1, 0));
-      } else if (state.direction.includes('s')) {
-        newArea[3] = Math.max(relativeY, Math.min(newArea[1] + 0.1, 1));
-      }
-
-      if (state.direction.includes('e')) {
-        newArea[2] = Math.max(relativeX, Math.min(newArea[0] + 0.1, 1));
-      } else if (state.direction.includes('w')) {
-        newArea[0] = Math.min(relativeX, Math.max(newArea[2] - 0.1, 0));
-      }
-
-      if (ratio) {
-        newArea = ensureRatio(
-          video,
-          ratio[0],
-          ratio[1],
-          newArea,
-          state.direction,
+      if (state.direction === 'm') {
+        const relativeX = clamp(
+          deltaX / rect.width,
+          -1 * state.area![0],
+          1 - state.area![2],
         );
-      }
-    }
+        const relativeY = clamp(
+          deltaY / rect.height,
+          -1 * state.area![1],
+          1 - state.area![3],
+        );
+        newArea[0] = state.area![0] + relativeX;
+        newArea[2] = state.area![2] + relativeX;
+        newArea[1] = state.area![1] + relativeY;
+        newArea[3] = state.area![3] + relativeY;
+      } else {
+        const relativeX = clamp((x - rect.left) / rect.width, 0, 1);
+        const relativeY = clamp((y - rect.top) / rect.height, 0, 1);
 
-    onChange(newArea);
-  }, {});
+        if (state.direction.includes('n')) {
+          newArea[1] = Math.min(relativeY, Math.max(newArea[3] - 0.1, 0));
+        } else if (state.direction.includes('s')) {
+          newArea[3] = Math.max(relativeY, Math.min(newArea[1] + 0.1, 1));
+        }
+
+        if (state.direction.includes('e')) {
+          newArea[2] = Math.max(relativeX, Math.min(newArea[0] + 0.1, 1));
+        } else if (state.direction.includes('w')) {
+          newArea[0] = Math.min(relativeX, Math.max(newArea[2] - 0.1, 0));
+        }
+
+        if (ratio) {
+          newArea = ensureRatio(
+            video,
+            ratio[0],
+            ratio[1],
+            newArea,
+            state.direction,
+          );
+        }
+      }
+
+      onChange(newArea);
+    },
+  });
 
   useEffect(() => {
     let updating = true;
@@ -270,14 +270,7 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
             viewBox="0 0 90 90"
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
-            onPointerDown={e =>
-              startDragging({
-                direction: 'm',
-                x: e.clientX,
-                y: e.clientY,
-                area,
-              })
-            }
+            {...dragProps({ direction: 'm', area })}
           >
             <line
               x1="30"
@@ -311,35 +304,35 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
           <div className={styles.handles}>
             <div
               className={styles.handleNW}
-              onPointerDown={() => startDragging({ direction: 'nw' })}
+              {...dragProps({ direction: 'nw' })}
             />
             <div
               className={styles.handleN}
-              onPointerDown={() => startDragging({ direction: 'n' })}
+              {...dragProps({ direction: 'n' })}
             />
             <div
               className={styles.handleNE}
-              onPointerDown={() => startDragging({ direction: 'ne' })}
+              {...dragProps({ direction: 'ne' })}
             />
             <div
               className={styles.handleE}
-              onPointerDown={() => startDragging({ direction: 'e' })}
+              {...dragProps({ direction: 'e' })}
             />
             <div
               className={styles.handleSE}
-              onPointerDown={() => startDragging({ direction: 'se' })}
+              {...dragProps({ direction: 'se' })}
             />
             <div
               className={styles.handleS}
-              onPointerDown={() => startDragging({ direction: 's' })}
+              {...dragProps({ direction: 's' })}
             />
             <div
               className={styles.handleSW}
-              onPointerDown={() => startDragging({ direction: 'sw' })}
+              {...dragProps({ direction: 'sw' })}
             />
             <div
               className={styles.handleW}
-              onPointerDown={() => startDragging({ direction: 'w' })}
+              {...dragProps({ direction: 'w' })}
             />
           </div>
         </div>

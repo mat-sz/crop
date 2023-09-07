@@ -22,14 +22,16 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
   const ignoreTimeUpdatesRef = useRef(false);
 
   const timelineRef = useRef<HTMLDivElement>(null);
-  const { startDragging, dragState } = usePointerDrag<{
+  const { dragProps, dragState } = usePointerDrag<{
     direction: string;
-    x?: number;
     time?: number[];
     currentTime?: number;
     paused: boolean;
-  }>(
-    (x, _, state) => {
+  }>({
+    onStart: () => {
+      video.pause();
+    },
+    onMove: ({ x, deltaX, state }) => {
       ignoreTimeUpdatesRef.current = true;
       const rect = timelineRef.current!.getBoundingClientRect();
 
@@ -40,7 +42,7 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
       switch (state.direction) {
         case 'move':
           relativeX = clamp(
-            (x - state.x!) / rect.width,
+            deltaX / rect.width,
             -1 * state.time![0],
             1 - state.time![1],
           );
@@ -73,19 +75,17 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
 
       onChange(newTime);
     },
-    {
-      onUp: state => {
-        ignoreTimeUpdatesRef.current = false;
-        if (typeof state.currentTime !== 'undefined') {
-          video.currentTime = state.currentTime;
-        }
+    onEnd: ({ state }) => {
+      ignoreTimeUpdatesRef.current = false;
+      if (typeof state.currentTime !== 'undefined') {
+        video.currentTime = state.currentTime;
+      }
 
-        if (!state.paused) {
-          video.play();
-        }
-      },
+      if (!state.paused) {
+        video.play();
+      }
     },
-  );
+  });
 
   useEffect(() => {
     const update = () => {
@@ -130,46 +130,33 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
               left: `${time[0] * 100}%`,
               right: `${100 - time[1] * 100}%`,
             }}
-            onPointerDown={e => {
-              e.stopPropagation();
-              startDragging({
-                direction: 'move',
-                x: e.clientX,
-                time,
-                paused: video.paused,
-              });
-              video.pause();
-            }}
+            {...dragProps({
+              direction: 'move',
+              time,
+              paused: video.paused,
+            })}
           >
             <div
               className={clsx(styles.handleLeft, {
                 [styles.active]: dragState?.direction === 'left',
               })}
               data-time={humanTime(time[0] * video.duration)}
-              onPointerDown={e => {
-                e.stopPropagation();
-                startDragging({
-                  direction: 'left',
-                  currentTime,
-                  paused: video.paused,
-                });
-                video.pause();
-              }}
+              {...dragProps({
+                direction: 'left',
+                currentTime,
+                paused: video.paused,
+              })}
             />
             <div
               className={clsx(styles.handleRight, {
                 [styles.active]: dragState?.direction === 'right',
               })}
               data-time={humanTime(time[1] * video.duration)}
-              onPointerDown={e => {
-                e.stopPropagation();
-                startDragging({
-                  direction: 'right',
-                  currentTime,
-                  paused: video.paused,
-                });
-                video.pause();
-              }}
+              {...dragProps({
+                direction: 'right',
+                currentTime,
+                paused: video.paused,
+              })}
             />
           </div>
           <div
@@ -179,16 +166,11 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
             style={{
               left: `${(currentTime / video.duration) * 100}%`,
             }}
-            onPointerDown={e => {
-              e.stopPropagation();
-              startDragging({
-                direction: 'seek',
-                x: e.clientX,
-                time,
-                paused: video.paused,
-              });
-              video.pause();
-            }}
+            {...dragProps({
+              direction: 'seek',
+              time,
+              paused: video.paused,
+            })}
             data-time={humanTime(currentTime)}
           ></div>
         </div>
