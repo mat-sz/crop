@@ -86,6 +86,11 @@ class MainStore {
       () => [this.transform, this.file],
       () => (this.outputUrl = undefined),
     );
+
+    reaction(
+      () => [this.step],
+      () => this.video?.pause(),
+    );
   }
 
   reset() {
