@@ -1,5 +1,5 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { makeAutoObservable, runInAction } from 'mobx';
+import { makeAutoObservable, reaction, runInAction } from 'mobx';
 import { get, set } from 'idb-keyval';
 
 const canUseMT =
@@ -81,6 +81,11 @@ class MainStore {
   constructor() {
     makeAutoObservable(this);
     this.load();
+
+    reaction(
+      () => [this.transform, this.file],
+      () => (this.outputUrl = undefined),
+    );
   }
 
   reset() {
