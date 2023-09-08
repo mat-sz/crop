@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { usePointerDrag } from 'react-use-pointer-drag';
 
 import styles from './VideoCrop.module.scss';
-import { usePointerDrag } from '../hooks/usePointerDrag';
 import { clamp } from '../helpers';
 import { mainStore } from '../stores/main';
 

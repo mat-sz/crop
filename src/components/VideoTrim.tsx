@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { BsPlay, BsPause } from 'react-icons/bs';
+import { usePointerDrag } from 'react-use-pointer-drag';
 
 import styles from './VideoTrim.module.scss';
-import { usePointerDrag } from '../hooks/usePointerDrag';
 import { clamp, humanTime } from '../helpers';
 import clsx from 'clsx';
 
