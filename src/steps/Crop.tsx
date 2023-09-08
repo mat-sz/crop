@@ -30,28 +30,32 @@ export const Crop: React.FC = observer(() => {
       <div className={styles.controls}>
         <div>
           <button
-            title={mainStore.mute ? 'Unmute' : 'Mute'}
+            title={mainStore.transform.mute ? 'Unmute' : 'Mute'}
             onClick={() => {
               runInAction(() => {
-                const mute = !mainStore.mute;
-                mainStore.mute = mute;
+                const mute = !mainStore.transform.mute;
+                mainStore.transform = {
+                  ...mainStore.transform,
+                  mute,
+                };
                 video.muted = mute;
               });
             }}
           >
-            {mainStore.mute ? <BsVolumeMute /> : <BsVolumeUp />}
+            {mainStore.transform.mute ? <BsVolumeMute /> : <BsVolumeUp />}
           </button>
           <button
             title="Flip horizontally"
             onClick={() => {
               runInAction(() => {
-                mainStore.flipH = !mainStore.flipH;
-                mainStore.area = [
-                  1 - mainStore.area[2],
-                  mainStore.area[1],
-                  1 - mainStore.area[0],
-                  mainStore.area[3],
-                ];
+                const { flipH, area } = mainStore.transform;
+                mainStore.transform = {
+                  ...mainStore.transform,
+                  flipH: !flipH,
+                  area: area
+                    ? [1 - area[2], area[1], 1 - area[0], area[3]]
+                    : undefined,
+                };
               });
             }}
           >
@@ -61,13 +65,14 @@ export const Crop: React.FC = observer(() => {
             title="Flip vertically"
             onClick={() => {
               runInAction(() => {
-                mainStore.flipV = !mainStore.flipV;
-                mainStore.area = [
-                  mainStore.area[0],
-                  1 - mainStore.area[3],
-                  mainStore.area[2],
-                  1 - mainStore.area[1],
-                ];
+                const { flipV, area } = mainStore.transform;
+                mainStore.transform = {
+                  ...mainStore.transform,
+                  flipV: !flipV,
+                  area: area
+                    ? [area[0], 1 - area[3], area[2], 1 - area[1]]
+                    : undefined,
+                };
               });
             }}
           >
@@ -97,20 +102,26 @@ export const Crop: React.FC = observer(() => {
         </div>
       </div>
       <VideoTrim
-        time={mainStore.time}
+        time={mainStore.transform.time}
         video={video}
-        onChange={time =>
+        onChange={time => {
           runInAction(() => {
-            mainStore.time = time;
-          })
-        }
+            mainStore.transform = {
+              ...mainStore.transform,
+              time,
+            };
+          });
+        }}
       />
       <VideoCrop
-        area={mainStore.area}
+        transform={mainStore.transform}
         video={video}
         onChange={area =>
           runInAction(() => {
-            mainStore.area = area;
+            mainStore.transform = {
+              ...mainStore.transform,
+              area,
+            };
           })
         }
       />

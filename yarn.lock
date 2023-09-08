@@ -1610,10 +1610,10 @@ react-refresh@^0.14.0:
   resolved "https://registry.yarnpkg.com/react-refresh/-/react-refresh-0.14.0.tgz#4e02825378a5f227079554d4284889354e5f553e"
   integrity sha512-wViHqhAd8OHeLS/IRMJjTSDHF3U9eWi62F/MledQGPdJGDhodXJ9PBLNGr6WWL7qlH12Mt3TyTpbS+hGXMjCzQ==
 
-react-use-pointer-drag@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/react-use-pointer-drag/-/react-use-pointer-drag-0.1.1.tgz#aabcc84b5420fb0b2b4badbf49c32bd20c25104a"
-  integrity sha512-B/9QFinwZ390wCz9O3oS4X8VSW78XVgJigCDs5UK7PJcBDa9XqhCeoQCFhNV3cfavOVBnyvSSDzpe9AI/hCO7g==
+react-use-pointer-drag@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/react-use-pointer-drag/-/react-use-pointer-drag-0.1.2.tgz#f5418f8eea6246b8969e93a97790bb995ddd04d5"
+  integrity sha512-Sm53xOun8NEYLFLUvywOSSnzYoxnx79TU2tecOrdhYKkSQyaoxoNvxA1+KtaKxqT/gy2TqxrvrgerkwoeF7S7g==
 
 react@^18.2.0:
   version "18.2.0"

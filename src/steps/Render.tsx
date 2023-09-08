@@ -26,12 +26,6 @@ export const Render: React.FC = observer(() => {
     );
   }
 
-  const x = mainStore.area[0];
-  const y = mainStore.area[1];
-
-  const w = mainStore.area[2] - x;
-  const h = mainStore.area[3] - y;
-
   const crop = async () => {
     await mainStore.ffmpeg.writeFile(
       'input',
@@ -41,40 +35,48 @@ export const Render: React.FC = observer(() => {
     const args: string[] = [];
     const filters: string[] = [];
 
-    if (mainStore.flipH) {
+    const { flipH, flipV, area, time, mute } = mainStore.transform;
+
+    if (flipH) {
       filters.push('hflip');
     }
 
-    if (mainStore.flipV) {
+    if (flipV) {
       filters.push('vflip');
     }
 
     if (
-      mainStore.area[0] !== 0 ||
-      mainStore.area[1] !== 0 ||
-      mainStore.area[2] !== 1 ||
-      mainStore.area[3] !== 1
+      area &&
+      (area[0] !== 0 || area[1] !== 0 || area[2] !== 1 || area[3] !== 1)
     ) {
+      const x = area[0];
+      const y = area[1];
+
+      const w = area[2] - x;
+      const h = area[3] - y;
+
       filters.push(`crop=in_w*${w}:in_h*${h}:in_w*${x}:in_h*${y}`);
     }
 
     // Add filters
     args.push('-vf', filters.join(', '));
 
-    let start = 0;
-    if (mainStore.time[0] !== 0) {
-      start = mainStore.time[0] * video.duration;
-      args.push('-ss', `${start}`);
-    }
+    if (time) {
+      let start = 0;
+      if (time[0] !== 0) {
+        start = time[0] * video.duration;
+        args.push('-ss', `${start}`);
+      }
 
-    if (mainStore.time[1] !== 1) {
-      args.push('-t', `${mainStore.time[1] * video.duration - start}`);
+      if (time[1] !== 1) {
+        args.push('-t', `${time[1] * video.duration - start}`);
+      }
     }
 
     args.push('-c:v', 'libx264');
     args.push('-preset', 'veryfast');
 
-    if (mainStore.mute) {
+    if (mute) {
       args.push('-an');
     } else {
       args.push('-c:a', 'copy');

@@ -3,11 +3,11 @@ import { usePointerDrag } from 'react-use-pointer-drag';
 
 import styles from './VideoCrop.module.scss';
 import { clamp } from '../helpers';
-import { mainStore } from '../stores/main';
+import { VideoTransform } from '../stores/main';
 
 interface VideoCropProps {
-  onChange: (area: number[]) => void;
-  area: number[];
+  onChange: (area: [number, number, number, number]) => void;
+  transform: VideoTransform;
   video: HTMLVideoElement;
 }
 
@@ -15,9 +15,9 @@ function ensureRatio(
   video: HTMLVideoElement,
   ratioH: number,
   ratioV: number,
-  area: number[],
+  area: [number, number, number, number],
   direction: string,
-) {
+): [number, number, number, number] {
   const oldW = area[2] - area[0];
   const oldH = area[3] - area[1];
   const w = oldW * video.videoWidth;
@@ -68,7 +68,7 @@ function ensureRatio(
   const rW = newWidth / video.videoWidth;
   const rH = newHeight / video.videoHeight;
 
-  const newArea = [...area];
+  const newArea: [number, number, number, number] = [...area];
   if (halfH) {
     newArea[0] = newArea[0] - (rW - oldW) / 2;
     newArea[2] = newArea[0] + rW;
@@ -91,10 +91,11 @@ function ensureRatio(
 }
 
 export const VideoCrop: React.FC<VideoCropProps> = ({
-  area,
+  transform,
   onChange,
   video,
 }) => {
+  const { area = [0, 0, 1, 1] } = transform;
   const [ratioName, setRatioName] = useState('free');
   const [ratio, setRatio] = useState<[number, number]>();
   const canvasPreviewRef = useRef<HTMLCanvasElement>(null);
@@ -111,7 +112,7 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
     onMove: ({ x, y, deltaX, deltaY, state }) => {
       const rect = canvasPreviewRef.current!.getBoundingClientRect();
 
-      let newArea = [...area];
+      let newArea: [number, number, number, number] = [...area];
 
       if (state.direction === 'm') {
         const relativeX = clamp(
@@ -172,12 +173,12 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
         context.fillRect(0, 0, canvas.width, canvas.height);
 
         context.save();
-        if (mainStore.flipH) {
+        if (transform.flipH) {
           context.translate(canvas.width, 0);
           context.scale(-1, 1);
         }
 
-        if (mainStore.flipV) {
+        if (transform.flipV) {
           context.translate(0, canvas.height);
           context.scale(1, -1);
         }
@@ -186,8 +187,8 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         const area = areaRef.current;
-        const rX = mainStore.flipH ? 1 - area[2] : area[0];
-        const rY = mainStore.flipV ? 1 - area[3] : area[1];
+        const rX = transform.flipH ? 1 - area[2] : area[0];
+        const rY = transform.flipV ? 1 - area[3] : area[1];
 
         const x = rX * canvas.width;
         const y = rY * canvas.height;
@@ -209,7 +210,7 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
     return () => {
       updating = false;
     };
-  }, [video]);
+  }, [video, transform]);
 
   const cropWidth = Math.floor((area[2] - area[0]) * video.videoWidth);
   const cropHeight = Math.floor((area[3] - area[1]) * video.videoHeight);

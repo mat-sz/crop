@@ -55,22 +55,25 @@ async function retrieveBlob(
   return URL.createObjectURL(blob);
 }
 
+export interface VideoTransform {
+  time?: [number, number];
+  area?: [number, number, number, number];
+  mute?: boolean;
+  flipH?: boolean;
+  flipV?: boolean;
+}
+
 class MainStore {
   loaded = false;
   loadProgress = 0;
   ffmpeg = new FFmpeg();
   file: File | undefined = undefined;
-  area: number[] = [0, 0, 1, 1];
-  time: number[] = [0, 1];
+  transform: VideoTransform = {};
 
   running = false;
   execProgress = 0;
   outputUrl: string | undefined = undefined;
   output: string = '';
-
-  mute = false;
-  flipH = false;
-  flipV = false;
 
   step = 0;
   video: HTMLVideoElement | undefined = undefined;
@@ -81,11 +84,7 @@ class MainStore {
   }
 
   reset() {
-    this.area = [0, 0, 1, 1];
-    this.time = [0, 1];
-    this.mute = false;
-    this.flipH = false;
-    this.flipV = false;
+    this.transform = {};
 
     if (this.video) {
       this.video.pause();
@@ -113,13 +112,17 @@ class MainStore {
     });
 
     video.addEventListener('ended', () => {
-      const min = this.time[0] * video.duration;
+      const start = this.transform.time?.[0] || 0;
+      const min = start * video.duration;
       video.currentTime = min;
     });
 
     video.addEventListener('timeupdate', () => {
-      const min = this.time[0] * video.duration;
-      const max = this.time[1] * video.duration;
+      const start = this.transform.time?.[0] || 0;
+      const end = this.transform.time?.[1] || 1;
+
+      const min = start * video.duration;
+      const max = end * video.duration;
 
       if (video.currentTime > max) {
         video.currentTime = min;

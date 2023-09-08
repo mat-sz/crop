@@ -1,20 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { BsPlay, BsPause } from 'react-icons/bs';
 import { usePointerDrag } from 'react-use-pointer-drag';
+import clsx from 'clsx';
 
 import styles from './VideoTrim.module.scss';
 import { clamp, humanTime } from '../helpers';
-import clsx from 'clsx';
 
 interface VideoTrimProps {
-  onChange: (time: number[]) => void;
-  time: number[];
+  onChange: (time: [number, number]) => void;
+  time?: [number, number];
   video: HTMLVideoElement;
 }
 
 export const VideoTrim: React.FC<VideoTrimProps> = ({
   onChange,
-  time,
+  time = [0, 1],
   video,
 }) => {
   const [currentTime, setCurrentTime] = useState(video.currentTime);
@@ -24,10 +24,12 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
   const timelineRef = useRef<HTMLDivElement>(null);
   const { dragProps, dragState } = usePointerDrag<{
     direction: string;
-    time?: number[];
+    time?: [number, number];
     currentTime?: number;
     paused: boolean;
   }>({
+    stopPropagation: true,
+    pointerDownStopPropagation: true,
     onStart: () => {
       video.pause();
     },
@@ -48,8 +50,7 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
       const rect = timelineRef.current!.getBoundingClientRect();
 
       let relativeX = clamp((x - rect.left) / rect.width, 0, 1);
-
-      const newTime = [...time];
+      const newTime: [number, number] = [...time];
 
       switch (state.direction) {
         case 'move':
