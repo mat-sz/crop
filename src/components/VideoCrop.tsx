@@ -216,8 +216,10 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
     };
   }, [video, transform]);
 
-  const cropWidth = Math.floor((area[2] - area[0]) * video.videoWidth);
-  const cropHeight = Math.floor((area[3] - area[1]) * video.videoHeight);
+  const cropWidth =
+    Math.trunc(((area[2] - area[0]) * video.videoWidth) / 2) * 2;
+  const cropHeight =
+    Math.trunc(((area[3] - area[1]) * video.videoHeight) / 2) * 2;
 
   return (
     <div>
