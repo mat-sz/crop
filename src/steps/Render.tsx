@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import clsx from 'clsx';
 import { observer } from 'mobx-react-lite';
 import { BsDownload } from 'react-icons/bs';
+import { runInAction } from 'mobx';
 
 import styles from './Render.module.scss';
 import { mainStore } from '../stores/main';
 import { Slider } from '../components/Slider';
 
 export const Render: React.FC = observer(() => {
-  const [scale, setScale] = useState(1);
   const [outputUrl, setOutputUrl] = useState<string>();
 
   const { ffmpeg, video } = mainStore;
@@ -30,7 +30,7 @@ export const Render: React.FC = observer(() => {
     );
   }
 
-  const { area } = mainStore.transform;
+  const { area, scale = 1 } = mainStore.transform;
   const x =
     Math.trunc((video.videoWidth * scale * (area ? area[0] : 0)) / 2) * 2;
   const y =
@@ -118,7 +118,16 @@ export const Render: React.FC = observer(() => {
             </div>
             <div>
               Scale: {Math.round(scale * 100) / 100}
-              <Slider min={0.1} max={1} value={scale} onChange={setScale} />
+              <Slider
+                min={0.1}
+                max={1}
+                value={scale}
+                onChange={value => {
+                  runInAction(() => {
+                    mainStore.transform.scale = value;
+                  });
+                }}
+              />
             </div>
           </div>
           <div className={styles.actions}>

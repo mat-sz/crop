@@ -3,10 +3,10 @@ import { usePointerDrag } from 'react-use-pointer-drag';
 
 import styles from './VideoCrop.module.scss';
 import { clamp } from '../helpers';
-import { VideoTransform } from '../stores/main';
+import { Area, VideoTransform } from '../stores/main';
 
 interface VideoCropProps {
-  onChange: (area: [number, number, number, number]) => void;
+  onChange: (area: Area) => void;
   transform: VideoTransform;
   video: HTMLVideoElement;
 }
@@ -15,9 +15,9 @@ function ensureRatio(
   video: HTMLVideoElement,
   ratioH: number,
   ratioV: number,
-  area: [number, number, number, number],
+  area: Area,
   direction: string,
-): [number, number, number, number] {
+): Area {
   const oldW = area[2] - area[0];
   const oldH = area[3] - area[1];
   const w = oldW * video.videoWidth;
@@ -68,7 +68,7 @@ function ensureRatio(
   const rW = newWidth / video.videoWidth;
   const rH = newHeight / video.videoHeight;
 
-  const newArea: [number, number, number, number] = [...area];
+  const newArea: Area = [...area];
   if (halfH) {
     newArea[0] = newArea[0] - (rW - oldW) / 2;
     newArea[2] = newArea[0] + rW;
@@ -116,7 +116,7 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
     onMove: ({ x, y, deltaX, deltaY, state }) => {
       const rect = canvasPreviewRef.current!.getBoundingClientRect();
 
-      let newArea: [number, number, number, number] = [...area];
+      let newArea: Area = [...area];
 
       if (state.direction === 'm') {
         const relativeX = clamp(

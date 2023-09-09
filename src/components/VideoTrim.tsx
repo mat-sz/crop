@@ -5,10 +5,11 @@ import clsx from 'clsx';
 
 import styles from './VideoTrim.module.scss';
 import { clamp, humanTime } from '../helpers';
+import { Time } from '../stores/main';
 
 interface VideoTrimProps {
-  onChange: (time: [number, number]) => void;
-  time?: [number, number];
+  onChange: (time: Time) => void;
+  time?: Time;
   video: HTMLVideoElement;
 }
 
@@ -24,7 +25,7 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
   const timelineRef = useRef<HTMLDivElement>(null);
   const { dragProps, dragState } = usePointerDrag<{
     direction: string;
-    time?: [number, number];
+    time?: Time;
     currentTime?: number;
     paused: boolean;
   }>({
@@ -50,7 +51,7 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
       const rect = timelineRef.current!.getBoundingClientRect();
 
       let relativeX = clamp((x - rect.left) / rect.width, 0, 1);
-      const newTime: [number, number] = [...time];
+      const newTime: Time = [...time];
 
       switch (state.direction) {
         case 'move':
