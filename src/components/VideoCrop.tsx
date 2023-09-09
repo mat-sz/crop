@@ -109,6 +109,8 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
     direction: string;
     area?: number[];
   }>({
+    preventDefault: true,
+    stopPropagation: true,
     onMove: ({ x, y, deltaX, deltaY, state }) => {
       const rect = canvasPreviewRef.current!.getBoundingClientRect();
 

@@ -68,6 +68,7 @@ class MainStore {
   loadProgress = 0;
   ffmpeg = new FFmpeg();
   file: File | undefined = undefined;
+  fileLoading = false;
   transform: VideoTransform = {};
 
   running = false;
@@ -103,22 +104,32 @@ class MainStore {
   }
 
   async loadVideo(file: File) {
+    this.video?.pause();
     this.video = undefined;
     this.file = file;
-    this.step = 1;
+    this.fileLoading = true;
     this.reset();
 
     const video = document.createElement('video');
     video.setAttribute('playsinline', '');
-    video.preload = 'auto';
+    video.preload = 'metadata';
     video.autoplay = false;
+
+    // Required when using a Service Worker on iOS Safari.
+    video.crossOrigin = 'anonymous';
 
     video.addEventListener('loadedmetadata', () => {
       runInAction(() => {
         video.currentTime = 0.01;
-        video.pause();
         this.video = video;
       });
+    });
+
+    video.addEventListener('canplay', () => {
+      if (this.fileLoading) {
+        this.fileLoading = false;
+        this.step = 1;
+      }
     });
 
     video.addEventListener('ended', () => {

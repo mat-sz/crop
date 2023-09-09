@@ -1,26 +1,31 @@
 import React from 'react';
 import { BsGithub } from 'react-icons/bs';
+import { observer } from 'mobx-react-lite';
 
 import styles from './SelectFile.module.scss';
 import { mainStore } from '../stores/main';
 
-export const SelectFile: React.FC = () => {
+export const SelectFile: React.FC = observer(() => {
   return (
     <div className={styles.step}>
-      <label>
-        <input
-          type="file"
-          accept="video/*"
-          onChange={e => {
-            const file = e.target.files?.[0];
-            if (file) {
-              mainStore.loadVideo(file);
-            }
-            e.target.value = '';
-          }}
-        />
-        <span>Select a video file</span>
-      </label>
+      {mainStore.fileLoading ? (
+        <div className={styles.loading}>Loading...</div>
+      ) : (
+        <label>
+          <input
+            type="file"
+            accept="video/*"
+            onChange={e => {
+              const file = e.target.files?.[0];
+              if (file) {
+                mainStore.loadVideo(file);
+              }
+              e.target.value = '';
+            }}
+          />
+          <span>Select a video file</span>
+        </label>
+      )}
       <div className={styles.credits}>
         <ul>
           <li>✔️ Free and open source</li>
@@ -51,4 +56,4 @@ export const SelectFile: React.FC = () => {
       </div>
     </div>
   );
-};
+});
