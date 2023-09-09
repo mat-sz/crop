@@ -1,5 +1,6 @@
 import React from 'react';
 import { observer } from 'mobx-react-lite';
+import { runInAction } from 'mobx';
 
 import './index.scss';
 import { Steps } from './components/Steps';
@@ -7,7 +8,6 @@ import { SelectFile } from './steps/SelectFile';
 import { mainStore } from './stores/main';
 import { Crop } from './steps/Crop';
 import { Render } from './steps/Render';
-import { runInAction } from 'mobx';
 
 export const App: React.FC = observer(() => {
   const step = mainStore.step;

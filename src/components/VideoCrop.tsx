@@ -3,7 +3,7 @@ import { usePointerDrag } from 'react-use-pointer-drag';
 
 import styles from './VideoCrop.module.scss';
 import { clamp } from '../helpers';
-import { Area, VideoTransform } from '../stores/main';
+import { Area, Ratio, VideoTransform } from '../types';
 
 interface VideoCropProps {
   onChange: (area: Area) => void;
@@ -99,7 +99,7 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
 }) => {
   const { area = [0, 0, 1, 1] } = transform;
   const [ratioName, setRatioName] = useState('free');
-  const [ratio, setRatio] = useState<[number, number]>();
+  const [ratio, setRatio] = useState<Ratio>();
   const canvasPreviewRef = useRef<HTMLCanvasElement>(null);
   const areaRef = useRef(area);
 
@@ -233,7 +233,7 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
 
               if (name !== 'free') {
                 const split = name.split(':');
-                const newRatio = [+split[0], +split[1]] as [number, number];
+                const newRatio: Ratio = [+split[0], +split[1]];
                 setRatio(newRatio);
                 onChange(
                   ensureRatio(video, newRatio[0], newRatio[1], area, 'se'),

@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
+import { IPointerDragData, usePointerDrag } from 'react-use-pointer-drag';
 
 import styles from './Slider.module.scss';
-import { IPointerDragData, usePointerDrag } from 'react-use-pointer-drag';
 import { clamp } from '../helpers';
 
 interface SliderProps {

@@ -2,6 +2,8 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { makeAutoObservable, reaction, runInAction } from 'mobx';
 import { get, set } from 'idb-keyval';
 
+import { VideoTransform } from '../types';
+
 const canUseMT =
   import.meta.env.VITE_ENABLE_MT === '1' && 'SharedArrayBuffer' in window;
 const ffmpegVersion = '0.12.3';
@@ -53,18 +55,6 @@ async function retrieveBlob(
 
   const blob = new Blob([buffer], { type });
   return URL.createObjectURL(blob);
-}
-
-export type Time = [start: number, end: number];
-export type Area = [left: number, top: number, right: number, bottom: number];
-
-export interface VideoTransform {
-  time?: Time;
-  area?: Area;
-  mute?: boolean;
-  flipH?: boolean;
-  flipV?: boolean;
-  scale?: number;
 }
 
 class FfmpegStore {

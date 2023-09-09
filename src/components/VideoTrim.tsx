@@ -5,7 +5,7 @@ import clsx from 'clsx';
 
 import styles from './VideoTrim.module.scss';
 import { clamp, humanTime } from '../helpers';
-import { Time } from '../stores/main';
+import { Time } from '../types';
 
 interface VideoTrimProps {
   onChange: (time: Time) => void;
