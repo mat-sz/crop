@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import clsx from 'clsx';
 import { observer } from 'mobx-react-lite';
 import { BsDownload } from 'react-icons/bs';
 
 import styles from './Render.module.scss';
 import { mainStore } from '../stores/main';
+import { Slider } from '../components/Slider';
 
 export const Render: React.FC = observer(() => {
+  const [scale, setScale] = useState(1);
+
   if (!mainStore.loaded) {
     return (
       <div className={styles.loading}>
@@ -25,6 +28,20 @@ export const Render: React.FC = observer(() => {
       </div>
     );
   }
+
+  const { area } = mainStore.transform;
+  const x =
+    Math.trunc((video.videoWidth * scale * (area ? area[0] : 0)) / 2) * 2;
+  const y =
+    Math.trunc((video.videoWidth * scale * (area ? area[1] : 0)) / 2) * 2;
+  const width =
+    Math.trunc(
+      (video.videoWidth * scale * (area ? area[2] - area[0] : 1)) / 2,
+    ) * 2;
+  const height =
+    Math.trunc(
+      (video.videoHeight * scale * (area ? area[3] - area[1] : 1)) / 2,
+    ) * 2;
 
   const crop = async () => {
     await mainStore.ffmpeg.writeFile(
@@ -45,17 +62,19 @@ export const Render: React.FC = observer(() => {
       filters.push('vflip');
     }
 
+    if (scale !== 1) {
+      filters.push(
+        `scale=${Math.trunc((video.videoWidth * scale) / 2) * 2}:${
+          Math.trunc((video.videoHeight * scale) / 2) * 2
+        }`,
+      );
+    }
+
     if (
       area &&
       (area[0] !== 0 || area[1] !== 0 || area[2] !== 1 || area[3] !== 1)
     ) {
-      const x = area[0];
-      const y = area[1];
-
-      const w = area[2] - x;
-      const h = area[3] - y;
-
-      filters.push(`crop=in_w*${w}:in_h*${h}:in_w*${x}:in_h*${y}`);
+      filters.push(`crop=${width}:${height}:${x}:${y}`);
     }
 
     // Add filters
@@ -94,21 +113,32 @@ export const Render: React.FC = observer(() => {
           <pre>{mainStore.output}</pre>
         </div>
       ) : (
-        <div className={styles.actions}>
-          <button onClick={crop}>
-            <span>Render MP4</span>
-          </button>
-          {mainStore.outputUrl && (
-            <a
-              href={mainStore.outputUrl}
-              download="cropped.mp4"
-              className={clsx('button', styles.download)}
-            >
-              <BsDownload />
-              <span>Download</span>
-            </a>
-          )}
-        </div>
+        <>
+          <div className={styles.settings}>
+            <div>
+              Resolution: {width}px x {height}px
+            </div>
+            <div>
+              Scale: {Math.round(scale * 100) / 100}
+              <Slider min={0.1} max={1} value={scale} onChange={setScale} />
+            </div>
+          </div>
+          <div className={styles.actions}>
+            <button onClick={crop}>
+              <span>Render MP4</span>
+            </button>
+            {mainStore.outputUrl && (
+              <a
+                href={mainStore.outputUrl}
+                download="cropped.mp4"
+                className={clsx('button', styles.download)}
+              >
+                <BsDownload />
+                <span>Download</span>
+              </a>
+            )}
+          </div>
+        </>
       )}
       {mainStore.outputUrl && !mainStore.running && (
         <div>

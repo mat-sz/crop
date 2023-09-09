@@ -1,0 +1,21 @@
+.slider {
+  padding: 1rem 0;
+
+  .track {
+    background: var(--color-fg);
+    position: relative;
+    height: 0.5rem;
+    border-radius: 5px;
+  }
+
+  .thumb {
+    position: absolute;
+    border-radius: 5px;
+    top: -0.75rem;
+    bottom: -0.75rem;
+    height: 2rem;
+    width: 0.75rem;
+    background: var(--color-interactive);
+    transform: translate(-50%, 0);
+  }
+}
