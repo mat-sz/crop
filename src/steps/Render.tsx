@@ -9,17 +9,18 @@ import { Slider } from '../components/Slider';
 
 export const Render: React.FC = observer(() => {
   const [scale, setScale] = useState(1);
+  const [outputUrl, setOutputUrl] = useState<string>();
 
-  if (!mainStore.loaded) {
+  const { ffmpeg, video } = mainStore;
+
+  if (!ffmpeg.loaded) {
     return (
       <div className={styles.loading}>
         <span>FFmpeg is loading... please wait!</span>
-        <progress value={mainStore.loadProgress} max={1} />
+        <progress value={ffmpeg.loadProgress} max={1} />
       </div>
     );
   }
-
-  const video = mainStore.video;
 
   if (!video) {
     return (
@@ -44,10 +45,7 @@ export const Render: React.FC = observer(() => {
     ) * 2;
 
   const crop = async () => {
-    await mainStore.ffmpeg.writeFile(
-      'input',
-      new Uint8Array(await mainStore.file!.arrayBuffer()),
-    );
+    setOutputUrl(undefined);
 
     const args: string[] = [];
     const filters: string[] = [];
@@ -101,16 +99,16 @@ export const Render: React.FC = observer(() => {
       args.push('-c:a', 'copy');
     }
 
-    mainStore.exec(args);
+    setOutputUrl(await ffmpeg.exec(mainStore.file!, args));
   };
 
   return (
     <div className={styles.step}>
-      {mainStore.running ? (
+      {ffmpeg.running ? (
         <div className={styles.info}>
           <span>Running</span>
-          <progress value={mainStore.execProgress} max={1} />
-          <pre>{mainStore.output}</pre>
+          <progress value={ffmpeg.execProgress} max={1} />
+          <pre>{ffmpeg.output}</pre>
         </div>
       ) : (
         <>
@@ -127,9 +125,9 @@ export const Render: React.FC = observer(() => {
             <button onClick={crop}>
               <span>Render MP4</span>
             </button>
-            {mainStore.outputUrl && (
+            {outputUrl && (
               <a
-                href={mainStore.outputUrl}
+                href={outputUrl}
                 download="cropped.mp4"
                 className={clsx('button', styles.download)}
               >
@@ -140,9 +138,9 @@ export const Render: React.FC = observer(() => {
           </div>
         </>
       )}
-      {mainStore.outputUrl && !mainStore.running && (
+      {outputUrl && !ffmpeg.running && (
         <div>
-          <video src={mainStore.outputUrl} controls />
+          <video src={outputUrl} controls />
         </div>
       )}
     </div>

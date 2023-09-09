@@ -63,30 +63,99 @@ export interface VideoTransform {
   flipV?: boolean;
 }
 
-class MainStore {
+class FfmpegStore {
   loaded = false;
   loadProgress = 0;
   ffmpeg = new FFmpeg();
-  file: File | undefined = undefined;
-  fileLoading = false;
-  transform: VideoTransform = {};
 
   running = false;
   execProgress = 0;
   outputUrl: string | undefined = undefined;
   output: string = '';
 
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  async load() {
+    this.ffmpeg.on('log', e => {
+      console.log(e);
+      runInAction(() => {
+        this.output = `${e.message}\n`;
+      });
+    });
+    this.ffmpeg.on('progress', e => {
+      runInAction(() => {
+        this.execProgress = e.progress;
+      });
+    });
+
+    // toBlobURL is used to bypass CORS issue, urls with the same
+    // domain can be used directly.
+    await this.ffmpeg.load({
+      coreURL: await retrieveBlob(
+        `${ffmpegBaseURL}/ffmpeg-core.js`,
+        'text/javascript',
+      ),
+      wasmURL: await retrieveBlob(
+        `${ffmpegBaseURL}/ffmpeg-core.wasm`,
+        'application/wasm',
+        progress => {
+          runInAction(() => {
+            this.loadProgress = progress;
+          });
+        },
+      ),
+      workerURL: ffmpegWorker
+        ? await retrieveBlob(
+            `${ffmpegBaseURL}/${ffmpegWorker}`,
+            'text/javascript',
+          )
+        : undefined,
+    });
+
+    runInAction(() => {
+      this.loadProgress = 1;
+      this.loaded = true;
+    });
+  }
+
+  async exec(file: File, args: string[]) {
+    this.running = true;
+    this.execProgress = 0;
+    this.output = '';
+
+    try {
+      await this.ffmpeg.writeFile(
+        'input',
+        new Uint8Array(await file.arrayBuffer()),
+      );
+      await this.ffmpeg.exec(['-i', 'input', ...args, 'output.mp4']);
+      const data = (await this.ffmpeg.readFile('output.mp4')) as Uint8Array;
+      return URL.createObjectURL(
+        new Blob([data.buffer], { type: 'video/mp4' }),
+      );
+    } finally {
+      runInAction(() => {
+        this.running = false;
+      });
+    }
+  }
+}
+
+class MainStore {
+  file: File | undefined = undefined;
+  fileLoading = false;
+  transform: VideoTransform = {};
+
+  ffmpeg = new FfmpegStore();
+
   step = 0;
   video: HTMLVideoElement | undefined = undefined;
 
   constructor() {
     makeAutoObservable(this);
-    this.load();
-
-    reaction(
-      () => [this.transform, this.file],
-      () => (this.outputUrl = undefined),
-    );
+    this.ffmpeg.load();
 
     reaction(
       () => [this.step],
@@ -153,72 +222,6 @@ class MainStore {
     });
 
     video.src = URL.createObjectURL(file);
-  }
-
-  async load() {
-    this.ffmpeg.on('log', e => {
-      console.log(e);
-      runInAction(() => {
-        this.output = `${e.message}\n`;
-      });
-    });
-    this.ffmpeg.on('progress', e => {
-      runInAction(() => {
-        this.execProgress = e.progress;
-      });
-    });
-
-    // toBlobURL is used to bypass CORS issue, urls with the same
-    // domain can be used directly.
-    await this.ffmpeg.load({
-      coreURL: await retrieveBlob(
-        `${ffmpegBaseURL}/ffmpeg-core.js`,
-        'text/javascript',
-      ),
-      wasmURL: await retrieveBlob(
-        `${ffmpegBaseURL}/ffmpeg-core.wasm`,
-        'application/wasm',
-        progress => {
-          runInAction(() => {
-            this.loadProgress = progress;
-          });
-        },
-      ),
-      workerURL: ffmpegWorker
-        ? await retrieveBlob(
-            `${ffmpegBaseURL}/${ffmpegWorker}`,
-            'text/javascript',
-          )
-        : undefined,
-    });
-
-    runInAction(() => {
-      this.loadProgress = 1;
-      this.loaded = true;
-    });
-  }
-
-  async exec(args: string[]) {
-    this.running = true;
-    this.execProgress = 0;
-    this.output = '';
-    this.outputUrl = undefined;
-
-    try {
-      await this.ffmpeg.writeFile(
-        'input',
-        new Uint8Array(await this.file!.arrayBuffer()),
-      );
-      await this.ffmpeg.exec(['-i', 'input', ...args, 'output.mp4']);
-      const data = (await this.ffmpeg.readFile('output.mp4')) as Uint8Array;
-      this.outputUrl = URL.createObjectURL(
-        new Blob([data.buffer], { type: 'video/mp4' }),
-      );
-    } finally {
-      runInAction(() => {
-        this.running = false;
-      });
-    }
   }
 }
 
