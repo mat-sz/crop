@@ -90,6 +90,8 @@ function ensureRatio(
   return newArea;
 }
 
+const handleDirections = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+
 export const VideoCrop: React.FC<VideoCropProps> = ({
   transform,
   onChange,
@@ -305,38 +307,14 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
             />
           </svg>
           <div className={styles.handles}>
-            <div
-              className={styles.handleNW}
-              {...dragProps({ direction: 'nw' })}
-            />
-            <div
-              className={styles.handleN}
-              {...dragProps({ direction: 'n' })}
-            />
-            <div
-              className={styles.handleNE}
-              {...dragProps({ direction: 'ne' })}
-            />
-            <div
-              className={styles.handleE}
-              {...dragProps({ direction: 'e' })}
-            />
-            <div
-              className={styles.handleSE}
-              {...dragProps({ direction: 'se' })}
-            />
-            <div
-              className={styles.handleS}
-              {...dragProps({ direction: 's' })}
-            />
-            <div
-              className={styles.handleSW}
-              {...dragProps({ direction: 'sw' })}
-            />
-            <div
-              className={styles.handleW}
-              {...dragProps({ direction: 'w' })}
-            />
+            {handleDirections.map(direction => (
+              <div
+                key={direction}
+                className={styles[`handle-${direction}`]}
+                style={{ cursor: `${direction}-resize` }}
+                {...dragProps({ direction })}
+              />
+            ))}
           </div>
         </div>
       </div>

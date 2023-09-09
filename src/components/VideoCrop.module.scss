@@ -57,76 +57,44 @@ $handle-offset: -$handle-width - $box-width;
     }
   }
 
-  .handleNW,
-  .handleN,
-  .handleNE {
+  .handle-nw,
+  .handle-n,
+  .handle-ne {
     top: $handle-offset;
     border-top-style: solid;
   }
 
-  .handleNW,
-  .handleW,
-  .handleSW {
+  .handle-nw,
+  .handle-w,
+  .handle-sw {
     left: $handle-offset;
     border-left-style: solid;
   }
 
-  .handleNE,
-  .handleE,
-  .handleSE {
+  .handle-ne,
+  .handle-e,
+  .handle-se {
     right: $handle-offset;
     border-right-style: solid;
   }
 
-  .handleSW,
-  .handleS,
-  .handleSE {
+  .handle-sw,
+  .handle-s,
+  .handle-se {
     bottom: $handle-offset;
     border-bottom-style: solid;
   }
 
-  .handleN,
-  .handleS {
+  .handle-n,
+  .handle-s {
     left: 50%;
     transform: translate(-50%, 0);
   }
 
-  .handleE,
-  .handleW {
+  .handle-e,
+  .handle-w {
     top: 50%;
     transform: translate(0, -50%);
-  }
-
-  .handleNW {
-    cursor: nw-resize;
-  }
-
-  .handleN {
-    cursor: n-resize;
-  }
-
-  .handleNE {
-    cursor: ne-resize;
-  }
-
-  .handleE {
-    cursor: e-resize;
-  }
-
-  .handleSE {
-    cursor: se-resize;
-  }
-
-  .handleS {
-    cursor: s-resize;
-  }
-
-  .handleSW {
-    cursor: sw-resize;
-  }
-
-  .handleW {
-    cursor: w-resize;
   }
 }
 
