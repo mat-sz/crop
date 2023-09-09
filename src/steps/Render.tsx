@@ -31,18 +31,12 @@ export const Render: React.FC = observer(() => {
   }
 
   const { area, scale = 1 } = mainStore.transform;
-  const x =
-    Math.trunc((video.videoWidth * scale * (area ? area[0] : 0)) / 2) * 2;
-  const y =
-    Math.trunc((video.videoWidth * scale * (area ? area[1] : 0)) / 2) * 2;
+  const x = Math.trunc((scale * (area ? area[0] : 0)) / 2) * 2;
+  const y = Math.trunc((scale * (area ? area[1] : 0)) / 2) * 2;
   const width =
-    Math.trunc(
-      (video.videoWidth * scale * (area ? area[2] - area[0] : 1)) / 2,
-    ) * 2;
+    Math.trunc((scale * (area ? area[2] : video.videoWidth)) / 2) * 2;
   const height =
-    Math.trunc(
-      (video.videoHeight * scale * (area ? area[3] - area[1] : 1)) / 2,
-    ) * 2;
+    Math.trunc((scale * (area ? area[3] : video.videoHeight)) / 2) * 2;
 
   const crop = async () => {
     setOutputUrl(undefined);

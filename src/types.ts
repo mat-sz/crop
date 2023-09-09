@@ -1,5 +1,5 @@
 export type Time = [start: number, end: number];
-export type Area = [left: number, top: number, right: number, bottom: number];
+export type Area = [x: number, y: number, width: number, height: number];
 
 export interface VideoTransform {
   time?: Time;

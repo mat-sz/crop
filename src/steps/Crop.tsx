@@ -53,7 +53,12 @@ export const Crop: React.FC = observer(() => {
                   ...mainStore.transform,
                   flipH: !flipH,
                   area: area
-                    ? [1 - area[2], area[1], 1 - area[0], area[3]]
+                    ? [
+                        video.videoWidth - area[2] - area[0],
+                        area[1],
+                        area[2],
+                        area[3],
+                      ]
                     : undefined,
                 };
               });
@@ -70,7 +75,12 @@ export const Crop: React.FC = observer(() => {
                   ...mainStore.transform,
                   flipV: !flipV,
                   area: area
-                    ? [area[0], 1 - area[3], area[2], 1 - area[1]]
+                    ? [
+                        area[0],
+                        video.videoHeight - area[3] - area[1],
+                        area[2],
+                        area[3],
+                      ]
                     : undefined,
                 };
               });

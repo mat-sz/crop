@@ -5,6 +5,8 @@ import styles from './VideoCrop.module.scss';
 import { clamp } from '../helpers';
 import { Area, Ratio, VideoTransform } from '../types';
 
+const MIN_CROP_SIZE = 100;
+
 interface VideoCropProps {
   onChange: (area: Area) => void;
   transform: VideoTransform;
@@ -17,19 +19,14 @@ function ensureRatio(
   ratioV: number,
   area: Area,
   direction: string,
-): Area {
-  const oldW = area[2] - area[0];
-  const oldH = area[3] - area[1];
-  const w = oldW * video.videoWidth;
-  const h = oldH * video.videoHeight;
+): Area | undefined {
+  const w = area[2];
+  const h = area[3];
 
   const endH = direction.includes('e');
   const endV = direction.includes('s');
   let halfH = false;
   let halfV = false;
-
-  const maxWidth = (endH ? 1 - area[0] : area[2]) * video.videoWidth;
-  const maxHeight = (endV ? 1 - area[1] : area[3]) * video.videoHeight;
 
   let maxDimension = Math.max(w / ratioH, h / ratioV);
 
@@ -44,47 +41,47 @@ function ensureRatio(
     halfH = true;
   }
 
-  let newWidth = maxWidth;
-  let newHeight = maxHeight;
+  let newWidth = area[2];
+  let newHeight = area[3];
 
   if (ratioH > ratioV) {
-    newWidth = Math.min(maxDimension * ratioH, maxWidth);
+    newWidth = maxDimension * ratioH;
     newHeight = (newWidth / ratioH) * ratioV;
-
-    if (newHeight > maxHeight) {
-      newWidth = (maxHeight / ratioV) * ratioH;
-      newHeight = maxHeight;
-    }
   } else {
-    newHeight = Math.min(maxDimension * ratioV, maxHeight);
+    newHeight = maxDimension * ratioV;
     newWidth = (newHeight / ratioV) * ratioH;
-
-    if (newWidth > maxWidth) {
-      newHeight = (maxWidth / ratioH) * ratioV;
-      newWidth = maxWidth;
-    }
   }
 
-  const rW = newWidth / video.videoWidth;
-  const rH = newHeight / video.videoHeight;
+  const rW = newWidth - w;
+  const rH = newHeight - h;
 
   const newArea: Area = [...area];
   if (halfH) {
-    newArea[0] = newArea[0] - (rW - oldW) / 2;
-    newArea[2] = newArea[0] + rW;
+    newArea[0] -= rW / 2;
+    newArea[2] += rW;
   } else if (endH) {
-    newArea[2] = newArea[0] + rW;
+    newArea[2] += rW;
   } else {
-    newArea[0] = newArea[2] - rW;
+    newArea[0] -= rW;
   }
 
   if (halfV) {
-    newArea[1] = newArea[1] - (rH - oldH) / 2;
-    newArea[3] = newArea[1] + rH;
+    newArea[1] -= rH / 2;
+    newArea[3] += rH;
   } else if (endV) {
-    newArea[3] = newArea[1] + rH;
+    newArea[3] += rH;
   } else {
-    newArea[1] = newArea[3] - rH;
+    newArea[1] -= rH;
+  }
+
+  if (
+    newArea[0] < 0 ||
+    newArea[1] < 0 ||
+    newArea[0] + newArea[2] >= video.videoWidth ||
+    newArea[1] + newArea[3] >= video.videoHeight
+  ) {
+    // TODO: Fix this so the user can drag the area towards the edges.
+    return undefined;
   }
 
   return newArea;
@@ -97,7 +94,7 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
   onChange,
   video,
 }) => {
-  const { area = [0, 0, 1, 1] } = transform;
+  const { area = [0, 0, video.videoWidth, video.videoHeight] } = transform;
   const [ratioName, setRatioName] = useState('free');
   const [ratio, setRatio] = useState<Ratio>();
   const canvasPreviewRef = useRef<HTMLCanvasElement>(null);
@@ -116,51 +113,74 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
     onMove: ({ x, y, deltaX, deltaY, state }) => {
       const rect = canvasPreviewRef.current!.getBoundingClientRect();
 
-      let newArea: Area = [...area];
+      const newArea: Area = [...area];
 
       if (state.direction === 'm') {
+        newArea[0] = clamp(
+          state.area![0] + (deltaX / rect.width) * video.videoWidth,
+          0,
+          video.videoWidth,
+        );
+        newArea[1] = clamp(
+          state.area![1] + (deltaY / rect.height) * video.videoHeight,
+          0,
+          video.videoHeight,
+        );
+        onChange(newArea);
+      } else {
         const relativeX = clamp(
-          deltaX / rect.width,
-          -1 * state.area![0],
-          1 - state.area![2],
+          ((x - rect.left) / rect.width) * video.videoWidth,
+          0,
+          video.videoWidth,
         );
         const relativeY = clamp(
-          deltaY / rect.height,
-          -1 * state.area![1],
-          1 - state.area![3],
+          ((y - rect.top) / rect.height) * video.videoHeight,
+          0,
+          video.videoHeight,
         );
-        newArea[0] = state.area![0] + relativeX;
-        newArea[2] = state.area![2] + relativeX;
-        newArea[1] = state.area![1] + relativeY;
-        newArea[3] = state.area![3] + relativeY;
-      } else {
-        const relativeX = clamp((x - rect.left) / rect.width, 0, 1);
-        const relativeY = clamp((y - rect.top) / rect.height, 0, 1);
 
         if (state.direction.includes('n')) {
-          newArea[1] = Math.min(relativeY, Math.max(newArea[3] - 0.1, 0));
+          newArea[1] = Math.min(
+            relativeY,
+            Math.max(area[1] + area[3] - MIN_CROP_SIZE, 0),
+          );
+          newArea[3] += area[1] - newArea[1];
         } else if (state.direction.includes('s')) {
-          newArea[3] = Math.max(relativeY, Math.min(newArea[1] + 0.1, 1));
+          newArea[3] = Math.max(
+            relativeY - newArea[1],
+            Math.min(MIN_CROP_SIZE, video.videoHeight),
+          );
         }
 
         if (state.direction.includes('e')) {
-          newArea[2] = Math.max(relativeX, Math.min(newArea[0] + 0.1, 1));
+          newArea[2] = Math.max(
+            relativeX - newArea[0],
+            Math.min(MIN_CROP_SIZE, video.videoWidth),
+          );
         } else if (state.direction.includes('w')) {
-          newArea[0] = Math.min(relativeX, Math.max(newArea[2] - 0.1, 0));
+          newArea[0] = Math.min(
+            relativeX,
+            Math.max(area[0] + area[2] - MIN_CROP_SIZE, 0),
+          );
+          newArea[2] += area[0] - newArea[0];
         }
 
         if (ratio) {
-          newArea = ensureRatio(
+          const ensuredArea = ensureRatio(
             video,
             ratio[0],
             ratio[1],
             newArea,
             state.direction,
           );
+
+          if (ensuredArea) {
+            onChange(ensuredArea);
+          }
+        } else {
+          onChange(newArea);
         }
       }
-
-      onChange(newArea);
     },
   });
 
@@ -191,13 +211,15 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         const area = areaRef.current;
-        const rX = transform.flipH ? 1 - area[2] : area[0];
-        const rY = transform.flipV ? 1 - area[3] : area[1];
 
-        const x = rX * canvas.width;
-        const y = rY * canvas.height;
-        const w = (area[2] - area[0]) * canvas.width;
-        const h = (area[3] - area[1]) * canvas.height;
+        const x =
+          (transform.flipH ? video.videoWidth - area[2] - area[0] : area[0]) *
+          (video.videoWidth / canvas.width);
+        const y =
+          (transform.flipV ? video.videoHeight - area[3] - area[1] : area[1]) *
+          (video.videoHeight / canvas.height);
+        const w = area[2] * (video.videoWidth / canvas.width);
+        const h = area[3] * (video.videoHeight / canvas.height);
 
         context.filter = 'none';
         context.drawImage(video, x, y, w, h, x, y, w, h);
@@ -216,10 +238,8 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
     };
   }, [video, transform]);
 
-  const cropWidth =
-    Math.trunc(((area[2] - area[0]) * video.videoWidth) / 2) * 2;
-  const cropHeight =
-    Math.trunc(((area[3] - area[1]) * video.videoHeight) / 2) * 2;
+  const cropWidth = Math.trunc(area[2] / 2) * 2;
+  const cropHeight = Math.trunc(area[3] / 2) * 2;
 
   return (
     <div>
@@ -235,9 +255,17 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
                 const split = name.split(':');
                 const newRatio: Ratio = [+split[0], +split[1]];
                 setRatio(newRatio);
-                onChange(
-                  ensureRatio(video, newRatio[0], newRatio[1], area, 'se'),
+
+                const ensuredArea = ensureRatio(
+                  video,
+                  newRatio[0],
+                  newRatio[1],
+                  area,
+                  'se',
                 );
+                if (ensuredArea) {
+                  onChange(ensuredArea);
+                }
               } else {
                 setRatio(undefined);
               }
@@ -264,10 +292,10 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
         <div
           className={styles.box}
           style={{
-            left: `${area[0] * 100}%`,
-            top: `${area[1] * 100}%`,
-            right: `${100 - area[2] * 100}%`,
-            bottom: `${100 - area[3] * 100}%`,
+            left: `${(area[0] / video.videoWidth) * 100}%`,
+            top: `${(area[1] / video.videoHeight) * 100}%`,
+            width: `${(area[2] / video.videoWidth) * 100}%`,
+            height: `${(area[3] / video.videoHeight) * 100}%`,
           }}
         >
           <div className={styles.dimensions}>
