@@ -70,7 +70,9 @@ export const Render: React.FC = observer(() => {
     }
 
     // Add filters
-    args.push('-vf', filters.join(', '));
+    if (filters.length > 0) {
+      args.push('-vf', filters.join(', '));
+    }
 
     if (time) {
       let start = 0;
