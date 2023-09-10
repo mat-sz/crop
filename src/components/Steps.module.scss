@@ -67,7 +67,7 @@
       top: 0.25rem;
       left: 50%;
       transform: translate(-50%, 0);
-      border: 1px solid black;
+      border: 1px solid var(--color-fg);
       border-radius: 100%;
       content: counter(steps);
       line-height: 0;

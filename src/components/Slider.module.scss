@@ -2,7 +2,7 @@
   padding: 1rem 0;
 
   .track {
-    background: var(--color-fg);
+    background: var(--color-interactive-dark);
     position: relative;
     height: 0.5rem;
     border-radius: 5px;
@@ -15,7 +15,7 @@
     bottom: -0.75rem;
     height: 2rem;
     width: 0.75rem;
-    background: var(--color-interactive);
+    background: var(--color-interactive-hover);
     transform: translate(-50%, 0);
   }
 }

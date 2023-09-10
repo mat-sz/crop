@@ -1,7 +1,7 @@
 label,
 .loading {
   position: relative;
-  background: #222222;
+  background: var(--color-interactive);
   color: white;
   border-radius: 5px;
   padding: 2rem;
@@ -11,7 +11,7 @@ label,
   box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.1);
 
   &:hover {
-    background: #444444;
+    background: var(--color-interactive-hover);
   }
 
   input {
@@ -42,7 +42,7 @@ label,
   }
 
   a {
-    color: black;
+    color: var(--colro-fg);
 
     svg {
       font-size: 1.2rem;

@@ -3,7 +3,21 @@
   --color-bg-soft: #d1d1e4;
   --color-fg: #222222;
   --color-fg-soft: #444444;
-  --color-interactive: #666666;
+  --color-interactive-dark: #111111;
+  --color-interactive: #33333a;
+  --color-interactive-hover: #444444;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #11111a;
+    --color-bg-soft: #23232a;
+    --color-fg: #ffffff;
+    --color-fg-soft: #eeeeee;
+    --color-interactive-dark: #29292a;
+    --color-interactive: #33333a;
+    --color-interactive-hover: #444444;
+  }
 }
 
 body {
@@ -52,11 +66,11 @@ progress {
   width: 100%;
 
   &::-moz-progress-bar {
-    background-color: #111111;
+    background-color: var(--color-interactive-hover);
   }
 
   &::-webkit-progress-value {
-    background-color: #111111;
+    background-color: var(--color-interactive-hover);
   }
 
   &::-webkit-progress-bar {
@@ -70,7 +84,7 @@ button,
   display: inline-flex;
   align-items: center;
   text-decoration: none;
-  background: #111111;
+  background: var(--color-interactive);
   color: white;
   cursor: pointer;
   border: none;
@@ -94,12 +108,12 @@ button,
 
 .select {
   display: inline-block;
-  background: #111111;
+  background: var(--color-interactive);
   padding: 0 0.25rem;
 }
 
 select {
-  background: #111111;
+  background: var(--color-interactive);
   color: white;
   border: none;
   outline: none !important;

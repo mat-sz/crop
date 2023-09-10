@@ -1,5 +1,5 @@
 .timeline {
-  background: #111111;
+  background: var(--color-interactive-dark);
   height: 2rem;
   flex: 1;
 
@@ -13,7 +13,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: #333333;
+    background: var(--color-interactive);
     cursor: move;
     touch-action: manipulation;
   }
