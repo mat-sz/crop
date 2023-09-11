@@ -10,4 +10,7 @@ export interface VideoTransform {
   scale?: number;
 }
 
-export type Ratio = [width: number, height: number];
+/**
+ * Width / height
+ */
+export type Ratio = number;

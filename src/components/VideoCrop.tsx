@@ -13,75 +13,13 @@ interface VideoCropProps {
   video: HTMLVideoElement;
 }
 
-function ensureRatio(
-  video: HTMLVideoElement,
-  ratioH: number,
-  ratioV: number,
-  area: Area,
-  direction: string,
-): Area | undefined {
-  const w = area[2];
-  const h = area[3];
-
-  const endH = direction.includes('e');
-  const endV = direction.includes('s');
-  let halfH = false;
-  let halfV = false;
-
-  let maxDimension = Math.max(w / ratioH, h / ratioV);
-
-  const horizontal = direction.includes('e') || direction.includes('w');
-  const vertical = direction.includes('n') || direction.includes('s');
-
-  if (horizontal && !vertical) {
-    maxDimension = w / ratioH;
-    halfV = true;
-  } else if (vertical && !horizontal) {
-    maxDimension = h / ratioV;
-    halfH = true;
-  }
-
-  let newWidth = area[2];
-  let newHeight = area[3];
-
-  if (ratioH > ratioV) {
-    newWidth = maxDimension * ratioH;
-    newHeight = (newWidth / ratioH) * ratioV;
-  } else {
-    newHeight = maxDimension * ratioV;
-    newWidth = (newHeight / ratioV) * ratioH;
-  }
-
-  const rW = newWidth - w;
-  const rH = newHeight - h;
-
+function ensureRatio(ratio: Ratio, area: Area): Area {
   const newArea: Area = [...area];
-  if (halfH) {
-    newArea[0] -= rW / 2;
-    newArea[2] += rW;
-  } else if (endH) {
-    newArea[2] += rW;
-  } else {
-    newArea[0] -= rW;
-  }
 
-  if (halfV) {
-    newArea[1] -= rH / 2;
-    newArea[3] += rH;
-  } else if (endV) {
-    newArea[3] += rH;
+  if (ratio > 1) {
+    newArea[3] = newArea[2] / ratio;
   } else {
-    newArea[1] -= rH;
-  }
-
-  if (
-    newArea[0] < 0 ||
-    newArea[1] < 0 ||
-    newArea[0] + newArea[2] >= video.videoWidth ||
-    newArea[1] + newArea[3] >= video.videoHeight
-  ) {
-    // TODO: Fix this so the user can drag the area towards the edges.
-    return undefined;
+    newArea[2] = newArea[3] * ratio;
   }
 
   return newArea;
@@ -105,82 +43,111 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
   }, [area]);
 
   const { dragProps } = usePointerDrag<{
-    direction: string;
-    area?: number[];
+    dirX: number;
+    dirY: number;
+    area: Area;
   }>({
     preventDefault: true,
     stopPropagation: true,
-    onMove: ({ x, y, deltaX, deltaY, state }) => {
+    onMove: ({ x, y, deltaX, deltaY, state: { dirX, dirY, area } }) => {
       const rect = canvasPreviewRef.current!.getBoundingClientRect();
 
       const newArea: Area = [...area];
 
-      if (state.direction === 'm') {
+      if (dirX === 0 && dirY === 0) {
         newArea[0] = clamp(
-          state.area![0] + (deltaX / rect.width) * video.videoWidth,
+          area[0] + deltaX / (rect.width / video.videoWidth),
           0,
-          video.videoWidth,
+          video.videoWidth - area[2],
         );
         newArea[1] = clamp(
-          state.area![1] + (deltaY / rect.height) * video.videoHeight,
+          area[1] + deltaY / (rect.height / video.videoHeight),
           0,
-          video.videoHeight,
+          video.videoHeight - area[3],
         );
-        onChange(newArea);
       } else {
         const relativeX = clamp(
-          ((x - rect.left) / rect.width) * video.videoWidth,
+          (x - rect.left) / (rect.width / video.videoWidth),
           0,
           video.videoWidth,
         );
         const relativeY = clamp(
-          ((y - rect.top) / rect.height) * video.videoHeight,
+          (y - rect.top) / (rect.height / video.videoHeight),
           0,
           video.videoHeight,
         );
 
-        if (state.direction.includes('n')) {
-          newArea[1] = Math.min(
-            relativeY,
-            Math.max(area[1] + area[3] - MIN_CROP_SIZE, 0),
-          );
-          newArea[3] += area[1] - newArea[1];
-        } else if (state.direction.includes('s')) {
-          newArea[3] = Math.max(
-            relativeY - newArea[1],
-            Math.min(MIN_CROP_SIZE, video.videoHeight),
-          );
-        }
-
-        if (state.direction.includes('e')) {
-          newArea[2] = Math.max(
-            relativeX - newArea[0],
-            Math.min(MIN_CROP_SIZE, video.videoWidth),
-          );
-        } else if (state.direction.includes('w')) {
-          newArea[0] = Math.min(
-            relativeX,
-            Math.max(area[0] + area[2] - MIN_CROP_SIZE, 0),
-          );
-          newArea[2] += area[0] - newArea[0];
-        }
+        const endX = area[0] + area[2];
+        const endY = area[1] + area[3];
 
         if (ratio) {
-          const ensuredArea = ensureRatio(
-            video,
-            ratio[0],
-            ratio[1],
-            newArea,
-            state.direction,
-          );
+          const dX = dirX === -1 ? area[0] - relativeX : relativeX - endX;
+          const dY = dirY === -1 ? area[1] - relativeY : relativeY - endY;
 
-          if (ensuredArea) {
-            onChange(ensuredArea);
+          const cX = endX - area[2] / 2;
+          const cY = endY - area[3] / 2;
+
+          const newMaxWidth = area[2] + dX;
+          const newMaxHeight = area[3] + dY;
+
+          let newWidth = MIN_CROP_SIZE;
+
+          if (dirX === 0) {
+            newWidth = Math.min(
+              cX * 2,
+              (video.videoWidth - cX) * 2,
+              newMaxHeight * ratio,
+            );
+          } else if (dirY === 0) {
+            newWidth = Math.min(
+              cY * 2 * ratio,
+              (video.videoHeight - cY) * 2 * ratio,
+              newMaxWidth,
+            );
+          } else {
+            const maxWidth = dirX === -1 ? endX : video.videoWidth - area[0];
+            const maxHeight = dirY === -1 ? endY : video.videoHeight - area[1];
+
+            newWidth = Math.max(
+              Math.min(maxWidth, newMaxHeight * ratio),
+              Math.min(newMaxWidth, maxHeight * ratio),
+            );
           }
+
+          newWidth = Math.max(
+            MIN_CROP_SIZE / (dirY === 0 ? 1 : ratio),
+            newWidth,
+          );
+          const newHeight = newWidth / ratio;
+
+          newArea[0] -= (area[2] - newWidth) * (0.5 * dirX - 0.5);
+          newArea[1] -= (area[3] - newHeight) * (0.5 * dirY - 0.5);
+          newArea[2] = newWidth;
+          newArea[3] = newHeight;
         } else {
-          onChange(newArea);
+          if (dirY === -1) {
+            newArea[1] = Math.min(relativeY, Math.max(endY - MIN_CROP_SIZE, 0));
+            newArea[3] = endY - newArea[1];
+          } else if (dirY === 1) {
+            newArea[3] = Math.max(
+              relativeY - newArea[1],
+              Math.min(MIN_CROP_SIZE, video.videoHeight),
+            );
+          }
+
+          if (dirX === -1) {
+            newArea[0] = Math.min(relativeX, Math.max(endX - MIN_CROP_SIZE, 0));
+            newArea[2] = endX - newArea[0];
+          } else if (dirX === 1) {
+            newArea[2] = Math.max(
+              relativeX - newArea[0],
+              Math.min(MIN_CROP_SIZE, video.videoWidth),
+            );
+          }
         }
       }
+
+      onChange(newArea);
     },
   });
 
@@ -253,16 +220,10 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
 
               if (name !== 'free') {
                 const split = name.split(':');
-                const newRatio: Ratio = [+split[0], +split[1]];
+                const newRatio = +split[0] / +split[1];
                 setRatio(newRatio);
 
-                const ensuredArea = ensureRatio(
-                  video,
-                  newRatio[0],
-                  newRatio[1],
-                  area,
-                  'se',
-                );
+                const ensuredArea = ensureRatio(newRatio, area);
                 if (ensuredArea) {
                   onChange(ensuredArea);
                 }
@@ -305,7 +266,7 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
             viewBox="0 0 90 90"
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
-            {...dragProps({ direction: 'm', area })}
+            {...dragProps({ dirX: 0, dirY: 0, area })}
           >
             <line
               x1="30"
@@ -342,7 +303,19 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
                 key={direction}
                 className={styles[`handle-${direction}`]}
                 style={{ cursor: `${direction}-resize` }}
-                {...dragProps({ direction })}
+                {...dragProps({
+                  dirX: direction.includes('e')
+                    ? 1
+                    : direction.includes('w')
+                    ? -1
+                    : 0,
+                  dirY: direction.includes('s')
+                    ? 1
+                    : direction.includes('n')
+                    ? -1
+                    : 0,
+                  area,
+                })}
               />
             ))}
           </div>
