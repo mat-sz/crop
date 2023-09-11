@@ -13,6 +13,8 @@ interface VideoTrimProps {
   video: HTMLVideoElement;
 }
 
+const MIN_DURATION = 0.02;
+
 export const VideoTrim: React.FC<VideoTrimProps> = ({
   onChange,
   time = [0, 1],
@@ -70,11 +72,17 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
           );
           break;
         case 'left':
-          newTime[0] = Math.min(relativeX, Math.max(newTime[1] - 0.1, 0));
+          newTime[0] = Math.min(
+            relativeX,
+            Math.max(newTime[1] - MIN_DURATION, 0),
+          );
           video.currentTime = newTime[0] * video.duration + 0.01;
           break;
         case 'right':
-          newTime[1] = Math.max(relativeX, Math.min(newTime[0] + 0.1, 1));
+          newTime[1] = Math.max(
+            relativeX,
+            Math.min(newTime[0] + MIN_DURATION, 1),
+          );
           video.currentTime = newTime[1] * video.duration;
           break;
         case 'seek':
