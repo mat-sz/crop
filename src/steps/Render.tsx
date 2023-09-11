@@ -77,13 +77,13 @@ export const Render: React.FC = observer(() => {
 
     if (time) {
       let start = 0;
-      if (time[0] !== 0) {
-        start = time[0] * video.duration;
+      if (time[0] > 0) {
+        start = time[0];
         args.push('-ss', `${start}`);
       }
 
-      if (time[1] !== 1) {
-        args.push('-t', `${time[1] * video.duration - start}`);
+      if (time[1] < video.duration) {
+        args.push('-t', `${time[1] - start}`);
       }
     }
 

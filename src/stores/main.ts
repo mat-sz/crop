@@ -199,21 +199,17 @@ class MainStore {
 
     video.addEventListener('ended', () => {
       const start = this.transform.time?.[0] || 0;
-      const min = start * video.duration;
-      video.currentTime = min;
+      video.currentTime = start;
     });
 
     video.addEventListener('timeupdate', () => {
       const start = this.transform.time?.[0] || 0;
-      const end = this.transform.time?.[1] || 1;
+      const end = this.transform.time?.[1] || video.duration;
 
-      const min = start * video.duration;
-      const max = end * video.duration;
-
-      if (video.currentTime > max) {
-        video.currentTime = min;
-      } else if (video.currentTime < min - 1) {
-        video.currentTime = min;
+      if (video.currentTime > end) {
+        video.currentTime = start;
+      } else if (video.currentTime < start - 1) {
+        video.currentTime = start;
       }
     });
 

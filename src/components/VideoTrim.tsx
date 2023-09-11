@@ -13,12 +13,12 @@ interface VideoTrimProps {
   video: HTMLVideoElement;
 }
 
-const MIN_DURATION = 0.02;
+const MIN_DURATION = 1;
 
 export const VideoTrim: React.FC<VideoTrimProps> = ({
   onChange,
-  time = [0, 1],
   video,
+  time = [0, video.duration],
 }) => {
   const [currentTime, setCurrentTime] = useState(video.currentTime);
   const [playing, setPlaying] = useState(!video.paused);
@@ -42,9 +42,9 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
       }
 
       const rect = timelineRef.current!.getBoundingClientRect();
-      const relativeX = clamp((x - rect.left) / rect.width, 0, 1);
-      const currentTime =
-        clamp(relativeX, state.time![0], state.time![1]) * video.duration;
+      const relativeX =
+        clamp((x - rect.left) / rect.width, 0, 1) * video.duration;
+      const currentTime = clamp(relativeX, state.time![0], state.time![1]);
       setCurrentTime(currentTime);
       video.currentTime = currentTime;
     },
@@ -52,43 +52,51 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
       ignoreTimeUpdatesRef.current = true;
       const rect = timelineRef.current!.getBoundingClientRect();
 
-      let relativeX = clamp((x - rect.left) / rect.width, 0, 1);
+      let relativeX =
+        clamp((x - rect.left) / rect.width, 0, 1) * video.duration;
       const newTime: Time = [...time];
 
       switch (state.direction) {
         case 'move':
-          relativeX = clamp(
-            deltaX / rect.width,
-            -1 * state.time![0],
-            1 - state.time![1],
-          );
-          newTime[0] = state.time![0] + relativeX;
-          newTime[1] = state.time![1] + relativeX;
+          {
+            relativeX = clamp(
+              (deltaX / rect.width) * video.duration,
+              -1 * state.time![0],
+              video.duration - state.time![1],
+            );
+            newTime[0] = state.time![0] + relativeX;
+            newTime[1] = state.time![1] + relativeX;
 
-          video.currentTime = clamp(
-            currentTime,
-            newTime[0] * video.duration,
-            newTime[1] * video.duration,
-          );
+            const currentTime = clamp(
+              video.currentTime,
+              newTime[0],
+              newTime[1],
+            );
+            setCurrentTime(currentTime);
+            video.currentTime = currentTime;
+          }
           break;
         case 'left':
           newTime[0] = Math.min(
             relativeX,
             Math.max(newTime[1] - MIN_DURATION, 0),
           );
-          video.currentTime = newTime[0] * video.duration + 0.01;
+          video.currentTime = newTime[0] + 0.01;
           break;
         case 'right':
           newTime[1] = Math.max(
             relativeX,
-            Math.min(newTime[0] + MIN_DURATION, 1),
+            Math.min(newTime[0] + MIN_DURATION, video.duration),
           );
-          video.currentTime = newTime[1] * video.duration;
+          video.currentTime = newTime[1];
           break;
         case 'seek':
           {
-            const currentTime =
-              clamp(relativeX, state.time![0], state.time![1]) * video.duration;
+            const currentTime = clamp(
+              relativeX,
+              state.time![0],
+              state.time![1],
+            );
             setCurrentTime(currentTime);
             video.currentTime = currentTime;
           }
@@ -149,8 +157,8 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
           <div
             className={styles.range}
             style={{
-              left: `${time[0] * 100}%`,
-              right: `${100 - time[1] * 100}%`,
+              left: `${(time[0] / video.duration) * 100}%`,
+              right: `${100 - (time[1] / video.duration) * 100}%`,
             }}
             {...dragProps({
               direction: 'move',
@@ -162,7 +170,7 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
               className={clsx(styles.handleLeft, {
                 [styles.active]: dragState?.direction === 'left',
               })}
-              data-time={humanTime(time[0] * video.duration)}
+              data-time={humanTime(time[0])}
               {...dragProps({
                 direction: 'left',
                 currentTime,
@@ -173,7 +181,7 @@ export const VideoTrim: React.FC<VideoTrimProps> = ({
               className={clsx(styles.handleRight, {
                 [styles.active]: dragState?.direction === 'right',
               })}
-              data-time={humanTime(time[1] * video.duration)}
+              data-time={humanTime(time[1])}
               {...dragProps({
                 direction: 'right',
                 currentTime,
