@@ -10,6 +10,7 @@ import { Slider } from '../components/Slider';
 
 export const Render: React.FC = observer(() => {
   const [outputUrl, setOutputUrl] = useState<string>();
+  const [logVisible, setLogVisible] = useState(false);
 
   const { ffmpeg, video } = mainStore;
 
@@ -146,6 +147,14 @@ export const Render: React.FC = observer(() => {
       {outputUrl && !ffmpeg.running && (
         <div>
           <video src={outputUrl} controls />
+        </div>
+      )}
+      {!!ffmpeg.log && (
+        <div className={styles.info}>
+          <button onClick={() => setLogVisible(value => !value)}>
+            {logVisible ? 'Hide log' : 'Show log'}
+          </button>
+          {logVisible && <pre>{ffmpeg.log}</pre>}
         </div>
       )}
     </div>

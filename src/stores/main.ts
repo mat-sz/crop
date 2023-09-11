@@ -66,6 +66,7 @@ class FfmpegStore {
   execProgress = 0;
   outputUrl: string | undefined = undefined;
   output: string = '';
+  log: string = '';
 
   constructor() {
     makeAutoObservable(this);
@@ -75,7 +76,8 @@ class FfmpegStore {
     this.ffmpeg.on('log', e => {
       console.log(e);
       runInAction(() => {
-        this.output = `${e.message}\n`;
+        this.output = e.message;
+        this.log += `${e.message}\n`;
       });
     });
     this.ffmpeg.on('progress', e => {
