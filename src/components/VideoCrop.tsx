@@ -36,11 +36,11 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
   const [ratioName, setRatioName] = useState('free');
   const [ratio, setRatio] = useState<Ratio>();
   const canvasPreviewRef = useRef<HTMLCanvasElement>(null);
-  const areaRef = useRef(area);
+  const transformRef = useRef(transform);
 
   useEffect(() => {
-    areaRef.current = area;
-  }, [area]);
+    transformRef.current = transform;
+  }, [transform]);
 
   const { dragProps } = usePointerDrag<{
     dirX: number;
@@ -157,13 +157,24 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
     const canvas = canvasPreviewRef.current;
     const context = canvas?.getContext('2d');
 
-    const update = () => {
-      if (canvas && context) {
-        context.filter = 'none';
-        context.fillStyle = '#ffffff';
-        context.fillRect(0, 0, canvas.width, canvas.height);
+    const CANVAS_FRAME_TIME = 1000 / 30;
+    let time = Date.now();
 
-        context.save();
+    const update = () => {
+      if (!updating) {
+        return;
+      }
+
+      const now = Date.now();
+      const shouldDraw =
+        now - time > CANVAS_FRAME_TIME && video.readyState === 4;
+
+      if (canvas && context && shouldDraw) {
+        time = now;
+        context.reset();
+        const transform = transformRef.current;
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
         if (transform.flipH) {
           context.translate(canvas.width, 0);
           context.scale(-1, 1);
@@ -174,28 +185,31 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
           context.scale(1, -1);
         }
 
-        context.filter = 'blur(5px) brightness(0.25)';
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const area = transform.area!;
 
-        const area = areaRef.current;
+        if (!area) {
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        } else {
+          context.filter = 'brightness(0.25)';
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        const x =
-          (transform.flipH ? video.videoWidth - area[2] - area[0] : area[0]) *
-          (video.videoWidth / canvas.width);
-        const y =
-          (transform.flipV ? video.videoHeight - area[3] - area[1] : area[1]) *
-          (video.videoHeight / canvas.height);
-        const w = area[2] * (video.videoWidth / canvas.width);
-        const h = area[3] * (video.videoHeight / canvas.height);
+          const x =
+            (transform.flipH ? video.videoWidth - area[2] - area[0] : area[0]) *
+            (video.videoWidth / canvas.width);
+          const y =
+            (transform.flipV
+              ? video.videoHeight - area[3] - area[1]
+              : area[1]) *
+            (video.videoHeight / canvas.height);
+          const w = area[2] * (video.videoWidth / canvas.width);
+          const h = area[3] * (video.videoHeight / canvas.height);
 
-        context.filter = 'none';
-        context.drawImage(video, x, y, w, h, x, y, w, h);
-        context.restore();
+          context.filter = 'none';
+          context.drawImage(video, x, y, w, h, x, y, w, h);
+        }
       }
 
-      if (updating) {
-        requestAnimationFrame(update);
-      }
+      requestAnimationFrame(update);
     };
 
     requestAnimationFrame(update);
@@ -203,7 +217,7 @@ export const VideoCrop: React.FC<VideoCropProps> = ({
     return () => {
       updating = false;
     };
-  }, [video, transform]);
+  }, [video]);
 
   const cropWidth = Math.trunc(area[2] / 2) * 2;
   const cropHeight = Math.trunc(area[3] / 2) * 2;
