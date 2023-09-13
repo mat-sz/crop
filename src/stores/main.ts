@@ -68,6 +68,8 @@ class FfmpegStore {
   output: string = '';
   log: string = '';
 
+  onLoadCallback: (() => void) | undefined = undefined;
+
   constructor() {
     makeAutoObservable(this);
 
@@ -114,6 +116,11 @@ class FfmpegStore {
     runInAction(() => {
       this.loadProgress = 1;
       this.loaded = true;
+
+      if (this.onLoadCallback) {
+        this.onLoadCallback();
+        this.onLoadCallback = undefined;
+      }
     });
   }
 
@@ -130,9 +137,7 @@ class FfmpegStore {
       await this.ffmpeg.exec(['-i', 'input', ...args, 'output.mp4']);
 
       const data = (await this.ffmpeg.readFile('output.mp4')) as Uint8Array;
-      return URL.createObjectURL(
-        new Blob([data.buffer], { type: 'video/mp4' }),
-      );
+      return new File([data.buffer], 'output.mp4', { type: 'video/mp4' });
     } finally {
       try {
         await this.ffmpeg.deleteFile('input');
@@ -191,9 +196,35 @@ class MainStore {
     this.video = undefined;
     this.file = file;
     this.fileLoading = true;
+    this.ffmpeg.onLoadCallback = undefined;
     this.reset();
 
     const video = document.createElement('video');
+    if (!video.canPlayType(file.type)) {
+      const remux = async () => {
+        const newFile = await this.ffmpeg.exec(file, [
+          '-c:v',
+          'copy',
+          '-c:a',
+          'copy',
+        ]);
+        if (newFile) {
+          this.loadVideo(newFile);
+        } else {
+          // TODO: Error handling.
+          runInAction(() => {
+            this.fileLoading = false;
+          });
+        }
+      };
+      if (this.ffmpeg.loaded) {
+        remux();
+      } else {
+        this.ffmpeg.onLoadCallback = remux;
+      }
+      return;
+    }
+
     video.setAttribute('playsinline', '');
     video.preload = 'metadata';
     video.autoplay = false;

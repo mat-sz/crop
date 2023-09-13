@@ -96,7 +96,8 @@ export const Render: React.FC = observer(() => {
       args.push('-c:a', 'copy');
     }
 
-    setOutputUrl(await ffmpeg.exec(mainStore.file!, args));
+    const newFile = await ffmpeg.exec(mainStore.file!, args);
+    setOutputUrl(URL.createObjectURL(newFile));
   };
 
   return (

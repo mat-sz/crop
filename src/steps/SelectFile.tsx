@@ -4,17 +4,18 @@ import { observer } from 'mobx-react-lite';
 
 import styles from './SelectFile.module.scss';
 import { mainStore } from '../stores/main';
+import { PrepareProgress } from '../components/PrepareProgress';
 
 export const SelectFile: React.FC = observer(() => {
   return (
     <div className={styles.step}>
       {mainStore.fileLoading ? (
-        <div className={styles.loading}>Loading...</div>
+        <PrepareProgress />
       ) : (
         <label>
           <input
             type="file"
-            accept="video/*"
+            accept="video/*,.mkv,.mov,.mp4,.m4v,.mk3d,.wmv,.asf,.mxf,.ts,.m2ts,.3gp,.3g2,.flv,.webm,.ogv,.rmvb,.avi"
             onChange={e => {
               const file = e.target.files?.[0];
               if (file) {

@@ -1,0 +1,33 @@
+.progress {
+  min-width: 0;
+  width: 100%;
+  max-width: 500px;
+
+  progress {
+    width: 100%;
+  }
+
+  pre {
+    max-width: 100%;
+    max-height: 500px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  video {
+    max-width: 100%;
+  }
+}
+
+.info,
+.actions {
+  margin-bottom: 0.25rem;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+}
