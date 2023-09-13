@@ -128,11 +128,23 @@ class FfmpegStore {
         new Uint8Array(await file.arrayBuffer()),
       );
       await this.ffmpeg.exec(['-i', 'input', ...args, 'output.mp4']);
+
       const data = (await this.ffmpeg.readFile('output.mp4')) as Uint8Array;
       return URL.createObjectURL(
         new Blob([data.buffer], { type: 'video/mp4' }),
       );
     } finally {
+      try {
+        await this.ffmpeg.deleteFile('input');
+      } catch {
+        //
+      }
+      try {
+        await this.ffmpeg.deleteFile('output.mp4');
+      } catch {
+        //
+      }
+
       runInAction(() => {
         this.running = false;
       });
