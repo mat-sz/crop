@@ -102,11 +102,18 @@ export const Render: React.FC = observer(() => {
   return (
     <div className={styles.step}>
       {ffmpeg.running ? (
-        <div className={styles.info}>
-          <span>Running</span>
-          <progress value={ffmpeg.execProgress} max={1} />
-          <pre>{ffmpeg.output}</pre>
-        </div>
+        <>
+          <div className={styles.actions}>
+            <button onClick={() => ffmpeg.cancel()}>
+              <span>Cancel</span>
+            </button>
+          </div>
+          <div className={styles.info}>
+            <span>Running</span>
+            <progress value={ffmpeg.execProgress} max={1} />
+            <pre>{ffmpeg.output}</pre>
+          </div>
+        </>
       ) : (
         <>
           <div className={styles.settings}>

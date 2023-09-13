@@ -70,9 +70,7 @@ class FfmpegStore {
 
   constructor() {
     makeAutoObservable(this);
-  }
 
-  async load() {
     this.ffmpeg.on('log', e => {
       console.log(e);
       runInAction(() => {
@@ -80,12 +78,15 @@ class FfmpegStore {
         this.log += `${e.message}\n`;
       });
     });
+
     this.ffmpeg.on('progress', e => {
       runInAction(() => {
         this.execProgress = e.progress;
       });
     });
+  }
 
+  async load() {
     // toBlobURL is used to bypass CORS issue, urls with the same
     // domain can be used directly.
     await this.ffmpeg.load({
@@ -136,6 +137,11 @@ class FfmpegStore {
         this.running = false;
       });
     }
+  }
+
+  cancel() {
+    this.ffmpeg.terminate();
+    this.load();
   }
 }
 
