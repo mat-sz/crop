@@ -6,7 +6,7 @@ import { VideoTransform } from '../types';
 
 const canUseMT =
   import.meta.env.VITE_ENABLE_MT === '1' && 'SharedArrayBuffer' in window;
-const ffmpegVersion = '0.12.3';
+const ffmpegVersion = '0.12.15';
 const ffmpegName = canUseMT ? 'core-mt' : 'core';
 const ffmpegWorker = canUseMT ? 'ffmpeg-core.worker.js' : undefined;
 const ffmpegBaseURL = `https://unpkg.com/@ffmpeg/${ffmpegName}@${ffmpegVersion}/dist/esm`;
